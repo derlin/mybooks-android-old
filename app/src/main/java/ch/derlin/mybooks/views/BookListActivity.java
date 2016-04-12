@@ -15,11 +15,17 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 import ch.derlin.mybooks.R;
+import ch.derlin.mybooks.books.Book;
 import ch.derlin.mybooks.dropbox.DboxConfig;
-import ch.derlin.mybooks.views.dummy.DummyContent;
 import com.dropbox.sync.android.*;
+import com.google.gson.GsonBuilder;
+import com.google.gson.reflect.TypeToken;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 /**
  * An activity representing a list of Books. This activity
@@ -38,10 +44,11 @@ public class BookListActivity extends AppCompatActivity{
      */
     private boolean mTwoPane;
 
-    private DbxFile booksFile;
+    private DbxFile mBooksFile;
+
+    private Map<String, Book> mBooksMap;
 
     private static final DbxPath DBX_PATH = new DbxPath( "mybooks.json" );
-
 
 
     @Override
@@ -49,7 +56,16 @@ public class BookListActivity extends AppCompatActivity{
         super.onCreate( savedInstanceState );
         setContentView( R.layout.activity_book_list );
 
-        getDbxFile();
+        View recyclerView = findViewById( R.id.book_list );
+        assert recyclerView != null;
+        if( !getDbxFile() ){
+            // todo: show error
+            return;
+        }
+
+        parseBooksFile();
+
+        setupRecyclerView( ( RecyclerView ) recyclerView );
 
         Toolbar toolbar = ( Toolbar ) findViewById( R.id.toolbar );
         setSupportActionBar( toolbar );
@@ -59,13 +75,11 @@ public class BookListActivity extends AppCompatActivity{
         fab.setOnClickListener( new View.OnClickListener(){
             @Override
             public void onClick( View view ){
-                Snackbar.make( view, "Replace with your own action", Snackbar.LENGTH_LONG ).setAction( "Action", null ).show();
+                Snackbar.make( view, "Replace with your own action", Snackbar.LENGTH_LONG ).setAction( "Action", null
+                ).show();
             }
         } );
 
-        View recyclerView = findViewById( R.id.book_list );
-        assert recyclerView != null;
-        setupRecyclerView( ( RecyclerView ) recyclerView );
 
         if( findViewById( R.id.book_detail_container ) != null ){
             // The detail container view will be present only in the
@@ -76,9 +90,21 @@ public class BookListActivity extends AppCompatActivity{
         }
     }
 
+
+    @Override
+    protected void onPause(){
+        if(mBooksFile != null){
+            mBooksFile.close();
+            mBooksFile = null;
+        }
+        super.onPause();
+
+    }
+
     // ----------------------------------------------------
 
-    private void getDbxFile(){
+
+    private boolean getDbxFile(){
 
         DbxAccount dbAccount = DboxConfig.getAccountManager( this ).getLinkedAccount();
 
@@ -90,33 +116,60 @@ public class BookListActivity extends AppCompatActivity{
             try{
                 DbxFileSystem fs = DbxFileSystem.forAccount( dbAccount );
                 try{
-                    booksFile = fs.open( DBX_PATH );
+                    mBooksFile = fs.open( DBX_PATH );
 
                 }catch( DbxException.NotFound e ){
-                    booksFile = fs.create( DBX_PATH );
-
+                    mBooksFile = fs.create( DBX_PATH );
                 }
+
+                return true;
+
             }catch( DbxException e ){
                 Log.e( TAG, "failed to open or create file.", e );
             }
         }
+
+        return false;
+    }
+
+
+    private boolean parseBooksFile(){
+
+        try{
+            mBooksMap = new GsonBuilder().create().fromJson( mBooksFile.readString(), new TypeToken<Map<String,
+                    Book>>(){}.getType() );
+            Log.d( TAG, "" + mBooksMap );
+            return true;
+
+        }catch( IOException e ){
+            e.printStackTrace();
+        }
+
+        return false;
     }
 
 
     // ----------------------------------------------------
 
+
     private void setupRecyclerView( @NonNull RecyclerView recyclerView ){
-        recyclerView.setAdapter( new SimpleItemRecyclerViewAdapter( DummyContent.ITEMS ) );
+        recyclerView.setAdapter( new BooksAdapter( mBooksMap.values() ) );
     }
 
+    // ----------------------------------------------------
 
-    public class SimpleItemRecyclerViewAdapter extends RecyclerView.Adapter<SimpleItemRecyclerViewAdapter.ViewHolder>{
+    public class BooksAdapter extends RecyclerView.Adapter<BooksAdapter.ViewHolder>{
 
-        private final List<DummyContent.DummyItem> mValues;
+        private final List<Book> mBooksList;
 
 
-        public SimpleItemRecyclerViewAdapter( List<DummyContent.DummyItem> items ){
-            mValues = items;
+        public BooksAdapter( Collection<Book> items ){
+            this( new ArrayList<Book>( items ) );
+        }
+
+
+        public BooksAdapter( List<Book> items ){
+            mBooksList = items;
         }
 
 
@@ -129,23 +182,25 @@ public class BookListActivity extends AppCompatActivity{
 
         @Override
         public void onBindViewHolder( final ViewHolder holder, int position ){
-            holder.mItem = mValues.get( position );
-            holder.mIdView.setText( mValues.get( position ).id );
-            holder.mContentView.setText( mValues.get( position ).content );
+            holder.mBook = mBooksList.get( position );
+            holder.mTitleView.setText( holder.mBook.title );
+            holder.mAuthorView.setText( holder.mBook.author );
 
             holder.mView.setOnClickListener( new View.OnClickListener(){
                 @Override
                 public void onClick( View v ){
                     if( mTwoPane ){
                         Bundle arguments = new Bundle();
-                        arguments.putString( BookDetailFragment.ARG_ITEM_ID, holder.mItem.id );
+                        arguments.putParcelable( BookDetailFragment.ARG_BOOK, holder.mBook );
                         BookDetailFragment fragment = new BookDetailFragment();
                         fragment.setArguments( arguments );
-                        getSupportFragmentManager().beginTransaction().replace( R.id.book_detail_container, fragment ).commit();
+                        getSupportFragmentManager().beginTransaction().replace( R.id.book_detail_container, fragment
+                        ).commit();
                     }else{
+                        // todo: don't destroy current activity
                         Context context = v.getContext();
                         Intent intent = new Intent( context, BookDetailActivity.class );
-                        intent.putExtra( BookDetailFragment.ARG_ITEM_ID, holder.mItem.id );
+                        intent.putExtra( BookDetailFragment.ARG_BOOK, holder.mBook );
 
                         context.startActivity( intent );
                     }
@@ -156,29 +211,30 @@ public class BookListActivity extends AppCompatActivity{
 
         @Override
         public int getItemCount(){
-            return mValues.size();
+            return mBooksList.size();
         }
 
 
         public class ViewHolder extends RecyclerView.ViewHolder{
             public final View mView;
-            public final TextView mIdView;
-            public final TextView mContentView;
-            public DummyContent.DummyItem mItem;
+            public final TextView mTitleView;
+            public final TextView mAuthorView;
+            public Book mBook;
 
 
             public ViewHolder( View view ){
                 super( view );
                 mView = view;
-                mIdView = ( TextView ) view.findViewById( R.id.id );
-                mContentView = ( TextView ) view.findViewById( R.id.content );
+                mTitleView = ( TextView ) view.findViewById( R.id.title );
+                mAuthorView = ( TextView ) view.findViewById( R.id.author );
             }
 
 
             @Override
             public String toString(){
-                return super.toString() + " '" + mContentView.getText() + "'";
+                return super.toString() + " '" + mTitleView.getText() + "'";
             }
         }
     }
+
 }

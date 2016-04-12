@@ -1,15 +1,15 @@
 package ch.derlin.mybooks.views;
 
 import android.app.Activity;
-import android.support.design.widget.CollapsingToolbarLayout;
 import android.os.Bundle;
+import android.support.design.widget.CollapsingToolbarLayout;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 import ch.derlin.mybooks.R;
-import ch.derlin.mybooks.views.dummy.DummyContent;
+import ch.derlin.mybooks.books.Book;
 
 /**
  * A fragment representing a single Book detail screen.
@@ -22,12 +22,12 @@ public class BookDetailFragment extends Fragment{
      * The fragment argument representing the item ID that this fragment
      * represents.
      */
-    public static final String ARG_ITEM_ID = "item_id";
+    public static final String ARG_BOOK = "book_parcel";
 
     /**
      * The dummy content this fragment is presenting.
      */
-    private DummyContent.DummyItem mItem;
+    private Book mBook;
 
 
     /**
@@ -42,16 +42,18 @@ public class BookDetailFragment extends Fragment{
     public void onCreate( Bundle savedInstanceState ){
         super.onCreate( savedInstanceState );
 
-        if( getArguments().containsKey( ARG_ITEM_ID ) ){
+        Activity activity = this.getActivity();
+
+        if( activity.getIntent().hasExtra( ARG_BOOK ) ){
             // Load the dummy content specified by the fragment
             // arguments. In a real-world scenario, use a Loader
             // to load content from a content provider.
-            mItem = DummyContent.ITEM_MAP.get( getArguments().getString( ARG_ITEM_ID ) );
+            mBook = activity.getIntent().getParcelableExtra( ARG_BOOK );
 
-            Activity activity = this.getActivity();
-            CollapsingToolbarLayout appBarLayout = ( CollapsingToolbarLayout ) activity.findViewById( R.id.toolbar_layout );
+            CollapsingToolbarLayout appBarLayout = ( CollapsingToolbarLayout ) activity.findViewById( R.id
+                    .toolbar_layout );
             if( appBarLayout != null ){
-                appBarLayout.setTitle( mItem.content );
+                appBarLayout.setTitle( mBook.title );
             }
         }
     }
@@ -62,8 +64,8 @@ public class BookDetailFragment extends Fragment{
         View rootView = inflater.inflate( R.layout.book_detail, container, false );
 
         // Show the dummy content as text in a TextView.
-        if( mItem != null ){
-            ( ( TextView ) rootView.findViewById( R.id.book_detail ) ).setText( mItem.details );
+        if( mBook != null ){
+            ( ( TextView ) rootView.findViewById( R.id.book_detail ) ).setText( mBook.notes );
         }
 
         return rootView;
