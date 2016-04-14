@@ -1,5 +1,6 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:recyclerviewfastscroller="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -17,18 +18,42 @@
     
     -->
 
-    <android.support.v7.widget.RecyclerView
-        android:id="@+id/book_list"
-        android:name="ch.derlin.mybooks.BookListFragment"
-        xmlns:android="http://schemas.android.com/apk/res/android"
-        xmlns:tools="http://schemas.android.com/tools"
+    <RelativeLayout
         android:layout_width="@dimen/item_width"
-        android:layout_height="match_parent"
-        android:layout_marginLeft="16dp"
-        android:layout_marginRight="16dp"
-        app:layoutManager="LinearLayoutManager"
-        tools:context=".views.BookListActivity"
-        tools:listitem="@layout/book_list_content" />
+        android:layout_height="match_parent">
+
+
+        <android.support.v7.widget.RecyclerView
+            android:id="@+id/book_list"
+            android:name="ch.derlin.mybooks.BookListFragment"
+            xmlns:android="http://schemas.android.com/apk/res/android"
+            xmlns:tools="http://schemas.android.com/tools"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginLeft="16dp"
+            android:layout_marginRight="16dp"
+            app:layoutManager="LinearLayoutManager"
+            tools:context=".views.BookListActivity"
+            tools:listitem="@layout/book_list_content" />
+
+        <xyz.danoz.recyclerviewfastscroller.vertical.VerticalRecyclerViewFastScroller
+            android:id="@+id/fast_scroller"
+            android:layout_width="25sp"
+            android:layout_height="match_parent"
+            android:layout_alignParentEnd="true" />
+
+        <ch.derlin.mybooks.MySectionIndicator
+            android:id="@+id/fast_scroller_section_title_indicator"
+            android:layout_width="wrap_content"
+            android:layout_height="72dp"
+            android:layout_toLeftOf="@id/fast_scroller"
+            android:layout_toStartOf="@id/fast_scroller"
+
+
+            recyclerviewfastscroller:rfs_backgroundColor="@android:color/black"
+            recyclerviewfastscroller:rfs_textColor="@android:color/white" />
+
+    </RelativeLayout>
 
     <FrameLayout
         android:id="@+id/book_detail_container"

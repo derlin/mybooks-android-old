@@ -3,16 +3,17 @@ package ch.derlin.mybooks.views;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.SectionIndexer;
 import android.widget.TextView;
 import ch.derlin.mybooks.R;
 import ch.derlin.mybooks.books.Book;
@@ -20,6 +21,8 @@ import ch.derlin.mybooks.dropbox.DboxConfig;
 import com.dropbox.sync.android.*;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
+import xyz.danoz.recyclerviewfastscroller.sectionindicator.SectionIndicator;
+import xyz.danoz.recyclerviewfastscroller.vertical.VerticalRecyclerViewFastScroller;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -56,16 +59,30 @@ public class BookListActivity extends AppCompatActivity{
         super.onCreate( savedInstanceState );
         setContentView( R.layout.activity_book_list );
 
-        View recyclerView = findViewById( R.id.book_list );
-        assert recyclerView != null;
         if( !getDbxFile() ){
             // todo: show error
             return;
         }
-
         parseBooksFile();
 
-        setupRecyclerView( ( RecyclerView ) recyclerView );
+        // setup recyclerview (listview)
+        RecyclerView recyclerView = ( RecyclerView ) findViewById( R.id.book_list );
+        assert recyclerView != null;
+        recyclerView.setAdapter( new BooksAdapter( mBooksMap.values() ) );
+
+        VerticalRecyclerViewFastScroller fastScroller = (VerticalRecyclerViewFastScroller) findViewById(R.id.fast_scroller);
+
+        // Connect the recycler to the scroller (to let the scroller scroll the list)
+        fastScroller.setRecyclerView( recyclerView );
+
+        // Connect the scroller to the recycler (to let the recycler scroll the scroller's handle)
+        recyclerView.addOnScrollListener( fastScroller.getOnScrollListener() );
+
+        // Connect the section indicator to the scroller
+        SectionIndicator sectionTitleIndicator = ( SectionIndicator ) findViewById( R.id.fast_scroller_section_title_indicator );
+        fastScroller.setSectionIndicator( sectionTitleIndicator );
+
+        setRecyclerViewLayoutManager( recyclerView );
 
         Toolbar toolbar = ( Toolbar ) findViewById( R.id.toolbar );
         setSupportActionBar( toolbar );
@@ -101,6 +118,24 @@ public class BookListActivity extends AppCompatActivity{
 
     }
 
+    // ----------------------------------------------------
+    /**
+     * Set RecyclerView's LayoutManager
+     */
+    public void setRecyclerViewLayoutManager(RecyclerView recyclerView) {
+        int scrollPosition = 0;
+
+        // If a layout manager has already been set, get current scroll position.
+        if (recyclerView.getLayoutManager() != null) {
+            scrollPosition =
+                    ((LinearLayoutManager ) recyclerView.getLayoutManager()).findFirstCompletelyVisibleItemPosition();
+        }
+
+        LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
+
+        recyclerView.setLayoutManager(linearLayoutManager);
+        recyclerView.scrollToPosition(scrollPosition);
+    }
     // ----------------------------------------------------
 
 
@@ -151,14 +186,7 @@ public class BookListActivity extends AppCompatActivity{
 
     // ----------------------------------------------------
 
-
-    private void setupRecyclerView( @NonNull RecyclerView recyclerView ){
-        recyclerView.setAdapter( new BooksAdapter( mBooksMap.values() ) );
-    }
-
-    // ----------------------------------------------------
-
-    public class BooksAdapter extends RecyclerView.Adapter<BooksAdapter.ViewHolder>{
+    public class BooksAdapter extends RecyclerView.Adapter<BooksAdapter.ViewHolder> implements SectionIndexer{
 
         private final List<Book> mBooksList;
 
@@ -212,6 +240,27 @@ public class BookListActivity extends AppCompatActivity{
         @Override
         public int getItemCount(){
             return mBooksList.size();
+        }
+
+
+        @Override
+        public Object[] getSections(){
+            return  mBooksList.toArray();
+        }
+
+
+        @Override
+        public int getPositionForSection( int sectionIndex ){
+            return 0;
+        }
+
+
+        @Override
+        public int getSectionForPosition( int position ){
+            if (position >= mBooksList.size()) {
+                position = mBooksList.size() - 1;
+            }
+            return position;
         }
 
 
