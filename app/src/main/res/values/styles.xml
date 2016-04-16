@@ -17,4 +17,43 @@
 
     <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
 
+    <!--my-->
+    <style name="header">
+        <item name="android:layout_width">fill_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:layout_marginTop">4dp</item>
+        <item name="android:padding">10dp</item>
+    </style>
+
+    <style name="Divider">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">1dp</item>
+        <item name="android:layout_marginBottom">5dp</item>
+        <item name="android:background">@color/colorAccent</item>
+        <!--<item name="android:background">?android:attr/listDivider</item>-->
+    </style>
+
+    <style name="details_font">
+        <item name="android:typeface">sans</item>
+        <item name="android:textSize">16dp</item>
+    </style>
+
+    <style name="details_label" parent="details_font">
+        <item name="android:layout_height">fill_parent</item>
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:textColor">@color/colorAccent</item>
+        <item name="android:padding">5dp</item>
+        <item name="android:layout_gravity">right</item>
+    </style>
+
+    <style name="details_value" parent="details_font">
+        <!--<item name="android:layout_gravity">fill</item>-->
+        <item name="android:paddingLeft">6dp</item>
+        <item name="android:layout_width">0dip</item>
+        <item name="android:layout_gravity">fill_horizontal</item>
+        <item name="android:textIsSelectable">true</item>
+    </style>
+
 </resources>

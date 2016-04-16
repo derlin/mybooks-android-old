@@ -1,4 +1,87 @@
-<TextView android:id="@+id/book_detail" style="?android:attr/textAppearanceLarge"
-    xmlns:android="http://schemas.android.com/apk/res/android" xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent"
-    android:layout_height="match_parent" android:padding="16dp" android:textIsSelectable="true"
-    tools:context=".views.BookDetailFragment" />
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+    <!--gridlayout with two columns-->
+    <!--scrollview : container for main content-->
+
+    <ScrollView
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent">
+
+        <GridLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20sp"
+            android:padding="10dp"
+            android:layout_marginRight="4dp"
+            android:columnCount="2"
+            android:orientation="horizontal"
+            android:useDefaultMargins="false">
+
+            <!--infos header-->
+            <!--<TextView-->
+                <!--style="@style/header"-->
+                <!--android:layout_columnSpan="2"-->
+                <!--android:text="Infos" />-->
+
+            <!--<View-->
+                <!--style="@style/Divider"-->
+                <!--android:layout_columnSpan="2"-->
+                <!--android:layout_marginBottom="10dp" />-->
+
+            <!--title-->
+            <TextView
+                style="@style/details_label"
+                android:text="Title" />
+
+            <TextView
+                android:id="@+id/details_title"
+                style="@style/details_value" />
+
+            <!--author-->
+            <TextView
+                style="@style/details_label"
+                android:text="Author" />
+
+            <TextView
+                android:id="@+id/details_author"
+                style="@style/details_value"
+                android:text="sdlfkjsj" />
+
+            <!--date-->
+            <TextView
+                style="@style/details_label"
+                android:text="Read on" />
+
+            <TextView
+                android:id="@+id/details_date"
+                style="@style/details_value"
+                android:text="sdlfkjsj" />
+
+
+            <!--notes header-->
+            <TextView
+                style="@style/header"
+                android:layout_marginTop="30sp"
+                android:layout_columnSpan="2"
+                android:text="Notes" />
+
+            <View
+                style="@style/Divider"
+                android:layout_columnSpan="2"
+                android:layout_marginBottom="10dp" />
+
+
+            <!--notes field-->
+            <TextView
+                android:id="@+id/details_notes"
+                style="@style/details_font"
+                android:layout_columnSpan="2"
+                android:padding="5dp" />
+
+
+        </GridLayout>
+    </ScrollView>
+
+</RelativeLayout><!--<TextView--><!--android:id="@+id/book_detail"--><!--style="?android:attr/textAppearanceLarge"--><!--xmlns:android="http://schemas.android.com/apk/res/android"--><!--xmlns:tools="http://schemas.android.com/tools"--><!--android:layout_width="match_parent"--><!--android:layout_height="match_parent"--><!--android:padding="16dp"--><!--android:textIsSelectable="true"--><!--tools:context=".views.BookDetailFragment" />-->

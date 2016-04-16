@@ -34,7 +34,7 @@
         android:layout_toStartOf="@id/fast_scroller"
 
 
-        recyclerviewfastscroller:rfs_backgroundColor="@android:color/black"
+        recyclerviewfastscroller:rfs_backgroundColor="#303F9F"
         recyclerviewfastscroller:rfs_textColor="@android:color/white"
         />
 
