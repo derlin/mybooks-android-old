@@ -9,7 +9,6 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -17,14 +16,10 @@ import android.widget.SectionIndexer;
 import android.widget.TextView;
 import ch.derlin.mybooks.R;
 import ch.derlin.mybooks.books.Book;
-import ch.derlin.mybooks.dropbox.DboxConfig;
-import com.dropbox.sync.android.*;
-import com.google.gson.GsonBuilder;
-import com.google.gson.reflect.TypeToken;
+import ch.derlin.mybooks.service.DboxService;
 import xyz.danoz.recyclerviewfastscroller.sectionindicator.SectionIndicator;
 import xyz.danoz.recyclerviewfastscroller.vertical.VerticalRecyclerViewFastScroller;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -47,11 +42,9 @@ public class BookListActivity extends AppCompatActivity{
      */
     private boolean mTwoPane;
 
-    private DbxFile mBooksFile;
-
     private Map<String, Book> mBooksMap;
 
-    private static final DbxPath DBX_PATH = new DbxPath( "mybooks.json" );
+    private static final String DBX_PATH = "mybooks.json";
 
 
     @Override
@@ -59,18 +52,21 @@ public class BookListActivity extends AppCompatActivity{
         super.onCreate( savedInstanceState );
         setContentView( R.layout.activity_book_list );
 
-        if( !getDbxFile() ){
-            // todo: show error
-            return;
-        }
-        parseBooksFile();
+        //        if( !getDbxFile() ){
+        //            // todo: show error
+        //            return;
+        //        }
+        //        parseBooksFile();
+
+        mBooksMap = DboxService.getInstance().getBooks();
 
         // setup recyclerview (listview)
         RecyclerView recyclerView = ( RecyclerView ) findViewById( R.id.book_list );
         assert recyclerView != null;
         recyclerView.setAdapter( new BooksAdapter( mBooksMap.values() ) );
 
-        VerticalRecyclerViewFastScroller fastScroller = (VerticalRecyclerViewFastScroller) findViewById(R.id.fast_scroller);
+        VerticalRecyclerViewFastScroller fastScroller = ( VerticalRecyclerViewFastScroller ) findViewById( R.id
+                .fast_scroller );
 
         // Connect the recycler to the scroller (to let the scroller scroll the list)
         fastScroller.setRecyclerView( recyclerView );
@@ -79,7 +75,8 @@ public class BookListActivity extends AppCompatActivity{
         recyclerView.addOnScrollListener( fastScroller.getOnScrollListener() );
 
         // Connect the section indicator to the scroller
-        SectionIndicator sectionTitleIndicator = ( SectionIndicator ) findViewById( R.id.fast_scroller_section_title_indicator );
+        SectionIndicator sectionTitleIndicator = ( SectionIndicator ) findViewById( R.id
+                .fast_scroller_section_title_indicator );
         fastScroller.setSectionIndicator( sectionTitleIndicator );
 
         setRecyclerViewLayoutManager( recyclerView );
@@ -110,75 +107,41 @@ public class BookListActivity extends AppCompatActivity{
 
     @Override
     protected void onPause(){
-        if(mBooksFile != null){
-            mBooksFile.close();
-            mBooksFile = null;
-        }
         super.onPause();
 
     }
 
     // ----------------------------------------------------
+
+
     /**
      * Set RecyclerView's LayoutManager
      */
-    public void setRecyclerViewLayoutManager(RecyclerView recyclerView) {
+    public void setRecyclerViewLayoutManager( RecyclerView recyclerView ){
         int scrollPosition = 0;
 
         // If a layout manager has already been set, get current scroll position.
-        if (recyclerView.getLayoutManager() != null) {
-            scrollPosition =
-                    ((LinearLayoutManager ) recyclerView.getLayoutManager()).findFirstCompletelyVisibleItemPosition();
+        if( recyclerView.getLayoutManager() != null ){
+            scrollPosition = ( ( LinearLayoutManager ) recyclerView.getLayoutManager() )
+                    .findFirstCompletelyVisibleItemPosition();
         }
 
-        LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
+        LinearLayoutManager linearLayoutManager = new LinearLayoutManager( this );
 
-        recyclerView.setLayoutManager(linearLayoutManager);
-        recyclerView.scrollToPosition(scrollPosition);
+        recyclerView.setLayoutManager( linearLayoutManager );
+        recyclerView.scrollToPosition( scrollPosition );
     }
     // ----------------------------------------------------
 
 
     private boolean getDbxFile(){
 
-        DbxAccount dbAccount = DboxConfig.getAccountManager( this ).getLinkedAccount();
-
-        if( dbAccount == null ){
-            Log.e( TAG, "No linked account." );
-
-        }else{
-
-            try{
-                DbxFileSystem fs = DbxFileSystem.forAccount( dbAccount );
-                try{
-                    mBooksFile = fs.open( DBX_PATH );
-
-                }catch( DbxException.NotFound e ){
-                    mBooksFile = fs.create( DBX_PATH );
-                }
-
-                return true;
-
-            }catch( DbxException e ){
-                Log.e( TAG, "failed to open or create file.", e );
-            }
-        }
 
         return false;
     }
 
 
     private boolean parseBooksFile(){
-
-        try{
-            mBooksMap = new GsonBuilder().create().fromJson( mBooksFile.readString(), new TypeToken<Map<String,
-                    Book>>(){}.getType() );
-            Log.d( TAG, "" + mBooksMap );
-            return true;
-
-        }catch( IOException e ){
-            e.printStackTrace();
-        }
 
         return false;
     }
@@ -245,7 +208,7 @@ public class BookListActivity extends AppCompatActivity{
 
         @Override
         public Object[] getSections(){
-            return  mBooksList.toArray();
+            return mBooksList.toArray();
         }
 
 
@@ -257,7 +220,7 @@ public class BookListActivity extends AppCompatActivity{
 
         @Override
         public int getSectionForPosition( int position ){
-            if (position >= mBooksList.size()) {
+            if( position >= mBooksList.size() ){
                 position = mBooksList.size() - 1;
             }
             return position;

@@ -9,8 +9,8 @@
         <option name="gradleJvm" value="1.8" />
         <option name="modules">
           <set>
-            <option value="/data/Git/MyBooks-Android" />
-            <option value="/data/Git/MyBooks-Android/app" />
+            <option value="/data/Git/MyBooks-Test" />
+            <option value="/data/Git/MyBooks-Test/app" />
           </set>
         </option>
       </GradleProjectSettings>

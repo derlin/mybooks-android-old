@@ -4,8 +4,6 @@
     xmlns:android="http://schemas.android.com/apk/res/android">
 
     <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
 
     <application
         android:allowBackup="true"
@@ -27,7 +25,7 @@
                 android:value=".views.BookListActivity" />
         </activity>
         <activity
-            android:name=".views.DbLinkActivity"
+            android:name=".views.StartActivity"
             android:label="@string/title_activity_start"
             android:theme="@style/AppTheme.NoActionBar">
             <intent-filter>
@@ -37,23 +35,23 @@
             </intent-filter>
         </activity>
 
+        <service android:enabled="true" android:name=".service.DboxService" />
+
         <!--dropbox activity-->
-        <activity android:name="com.dropbox.sync.android.DbxAuthActivity" />
         <activity
             android:name="com.dropbox.client2.android.AuthActivity"
-            android:launchMode="singleTask" >
+            android:configChanges="orientation|keyboard"
+            android:launchMode="singleTask"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar">
             <intent-filter>
+                <!-- Change this to be db- followed by your app key -->
                 <data android:scheme="db-213bpo6j2q90un0" />
                 <action android:name="android.intent.action.VIEW" />
+
                 <category android:name="android.intent.category.BROWSABLE" />
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
-        <service
-            android:name="com.dropbox.sync.android.DbxSyncService"
-            android:enabled="true"
-            android:exported="false"
-            android:label="Dropbox Sync" />
     </application>
 
 </manifest>
