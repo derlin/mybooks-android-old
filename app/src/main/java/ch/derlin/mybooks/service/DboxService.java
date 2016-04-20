@@ -1,6 +1,8 @@
 package ch.derlin.mybooks.service;
 
 import android.content.Intent;
+import android.os.Binder;
+import android.os.IBinder;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import ch.derlin.mybooks.books.Book;
@@ -27,33 +29,46 @@ import static ch.derlin.mybooks.service.DboxConstants.*;
  */
 public class DboxService extends BaseDboxService{
 
-    private static DboxService INSTANCE;
     private static final String BOOKS_FILE_PATH = "/mybooks.json";
     protected LocalBroadcastManager mBroadcastManager;
 
     private Gson mGson = new GsonBuilder().create();
     private Map<String, Book> mBooks;
     private String mLatestRev;
+    private boolean mFileOpened = false;
+    private Thread mGetFileThread = null, mUpdateFileThread = null;
 
+    // ----------------------------------------------------
+
+    /** Binder for this service * */
+    public class DbxBinder extends Binder{
+        /**
+         * @return a reference to the bound service
+         */
+        public DboxService getService(){
+            return DboxService.this;
+        }
+    }//end class
+
+    private DbxBinder myBinder = new DbxBinder();
+
+
+    @Override
+    public IBinder onBind( Intent arg0 ){
+        return myBinder;
+    }
     // ----------------------------------------------------
 
 
     @Override
     public void onCreate(){
         super.onCreate();
-        INSTANCE = this;
     }
 
 
     @Override
     public void onDestroy(){
-        INSTANCE = null;
         super.onDestroy();
-    }
-
-
-    public static DboxService getInstance(){
-        return INSTANCE;
     }
 
 
@@ -67,18 +82,26 @@ public class DboxService extends BaseDboxService{
     // ----------------------------------------------------
 
 
+    public boolean isFileOpened(){
+        return mFileOpened;
+    }
+
+
     public List<Book> getBooks(){
-        return new ArrayList<>( mBooks.values() );
+        return mFileOpened && mBooks != null ?  //
+                new ArrayList<>( mBooks.values() ) : null;
     }
 
 
     public List<String> getTitles(){
-        return new ArrayList<>( mBooks.keySet() );
+        return mFileOpened && mBooks != null ?  //
+                new ArrayList<>( mBooks.keySet() ) : null;
     }
 
 
     public Book getBook( String title ){
-        return mBooks.get( title );
+        return mFileOpened && mBooks != null ?  //
+                mBooks.get( title ) : null;
     }
 
 
@@ -86,14 +109,40 @@ public class DboxService extends BaseDboxService{
         return mLatestRev;
     }
 
+    // ----------------------------------------------------
 
-    public void startDownload(){
-        new Thread( new RunnableGetFile() ).start();
+
+    public boolean openFile(){
+        if( mGetFileThread == null ){
+            mGetFileThread = new Thread( new RunnableGetFile() );
+            mGetFileThread.start();
+            return true;
+        }
+        return false;
     }
 
 
-    public void startUpload(){
-        new Thread( new RunnableUpdate() ).start();
+    public void closeFile(){
+        if( mGetFileThread != null ){
+            mGetFileThread.interrupt();
+            mGetFileThread = null;
+        }
+        if( mUpdateFileThread != null ){
+            mUpdateFileThread.interrupt();
+            mUpdateFileThread = null;
+        }
+
+        mFileOpened = false;
+    }
+
+
+    public boolean startUpload(){
+        if( mUpdateFileThread == null ){
+            mUpdateFileThread = new Thread( new RunnableUpdate() );
+            mUpdateFileThread.start();
+            return true;
+        }
+        return false;
     }
 
     // ----------------------------------------------------
@@ -101,9 +150,11 @@ public class DboxService extends BaseDboxService{
 
     private class RunnableUpdate implements Runnable{
         public void run(){
+
             File file = null;
 
             try{
+
                 File.createTempFile( "mybooks", "json" );
 
                 try( FileOutputStream out = new FileOutputStream( file ) ){
@@ -120,9 +171,12 @@ public class DboxService extends BaseDboxService{
             }catch( Exception e ){
                 Log.e( getClass().getName(), e.toString() );
                 notifyError( String.format( "error uploading file (%s)", e.getMessage() ) );
+
+            }finally{
+                if( file != null ) file.delete();
+                mUpdateFileThread = null;
             }
 
-            if( file != null ) file.delete();
         }
     }
 
@@ -130,6 +184,7 @@ public class DboxService extends BaseDboxService{
     private class RunnableGetFile implements Runnable{
 
         public void run(){
+
             File file = null;
 
             try{
@@ -139,22 +194,25 @@ public class DboxService extends BaseDboxService{
                 DropboxAPI.DropboxFileInfo info = mDBApi.getFile( BOOKS_FILE_PATH, null, outputStream, null );
                 String rev = info.getMetadata().rev;
 
-                if( mLatestRev != null && mLatestRev.equals( rev ) ){
-                    // no change
-                    file.delete();
-                    return;
+                if( mLatestRev == null || mLatestRev.equals( rev ) ){
+                    // there is actually a change
+                    mBooks = mGson.fromJson( new FileReader( file ), new TypeToken<Map<String, Book>>(){}.getType() );
+                    if( mBooks != null ){
+                        mFileOpened = true;
+                        notifyBooksChanged();
+                    }
                 }
-
-                mBooks = mGson.fromJson( new FileReader( file ), new TypeToken<Map<String, Book>>(){}.getType() );
-
-                notifyBooksChanged();
 
             }catch( Exception e ){
                 Log.e( getClass().getName(), e.toString() );
                 notifyError( String.format( "Could not get file (%s)", e.getMessage() ) );
+
+            }finally{
+                if( file != null ) file.delete();
+                mGetFileThread = null;
+
             }
 
-            if( file != null ) file.delete();
         }
     }
 

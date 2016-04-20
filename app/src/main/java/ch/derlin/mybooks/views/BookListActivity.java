@@ -1,8 +1,11 @@
 package ch.derlin.mybooks.views;
 
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
@@ -16,12 +19,12 @@ import android.widget.SectionIndexer;
 import android.widget.TextView;
 import ch.derlin.mybooks.R;
 import ch.derlin.mybooks.books.Book;
+import ch.derlin.mybooks.service.DboxBroadcastReceiver;
 import ch.derlin.mybooks.service.DboxService;
 import xyz.danoz.recyclerviewfastscroller.sectionindicator.SectionIndicator;
 import xyz.danoz.recyclerviewfastscroller.vertical.VerticalRecyclerViewFastScroller;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 /**
@@ -34,42 +37,74 @@ import java.util.List;
  */
 public class BookListActivity extends AppCompatActivity{
 
-    private static final String TAG = BookListActivity.class.getCanonicalName();
     /**
      * Whether or not the activity is in two-pane mode, i.e. running on a tablet
      * device.
      */
     private boolean mTwoPane;
+    private BooksAdapter mAdapter;
+
+    // ----------------------------------------------------
 
     private DboxService mService;
+
+    private ServiceConnection mServiceConnection = new ServiceConnection(){
+
+        @Override
+        public void onServiceConnected( ComponentName name, IBinder service ){
+            mService = ( ( DboxService.DbxBinder ) service ).getService();
+            mService.openFile();
+        }
+
+
+        @Override
+        public void onServiceDisconnected( ComponentName name ){
+            mService.closeFile();
+            mService = null;
+        }
+    };
+
+    // ----------------------------------------------------
+
+    private DboxBroadcastReceiver mReceiver = new DboxBroadcastReceiver(){
+        @Override
+        protected void onBooksChanged( String rev ){
+            assert mService.getBooks() != null;
+            mAdapter.setBooksList( mService.getBooks() );
+        }
+
+
+        @Override
+        protected void onError( String msg ){
+            Snackbar.make( null, msg, Snackbar.LENGTH_LONG ).show();
+        }
+
+
+        @Override
+        protected void onUploadOk(){
+            Snackbar.make( null, "upload done.", Snackbar.LENGTH_LONG ).show();
+        }
+    };
+
+    // ----------------------------------------------------
+
 
     @Override
     protected void onCreate( Bundle savedInstanceState ){
         super.onCreate( savedInstanceState );
         setContentView( R.layout.activity_book_list );
 
-        mService = DboxService.getInstance();
-
         // setup recyclerview (listview)
         RecyclerView recyclerView = ( RecyclerView ) findViewById( R.id.book_list );
-        assert recyclerView != null;
-        recyclerView.setAdapter( new BooksAdapter( mService.getBooks() ) );
 
-        VerticalRecyclerViewFastScroller fastScroller = ( VerticalRecyclerViewFastScroller ) findViewById( R.id
-                .fast_scroller );
+        if( mService != null && mService.getBooks() != null ){
+            mAdapter = new BooksAdapter( mService.getBooks() );
 
-        // Connect the recycler to the scroller (to let the scroller scroll the list)
-        fastScroller.setRecyclerView( recyclerView );
+        }else{
+            mAdapter = new BooksAdapter();
+        }
 
-        // Connect the scroller to the recycler (to let the recycler scroll the scroller's handle)
-        recyclerView.addOnScrollListener( fastScroller.getOnScrollListener() );
-
-        // Connect the section indicator to the scroller
-        SectionIndicator sectionTitleIndicator = ( SectionIndicator ) findViewById( R.id
-                .fast_scroller_section_title_indicator );
-        fastScroller.setSectionIndicator( sectionTitleIndicator );
-
-        setRecyclerViewLayoutManager( recyclerView );
+        setRecyclerViewLayoutManager( recyclerView, mAdapter );
 
         Toolbar toolbar = ( Toolbar ) findViewById( R.id.toolbar );
         setSupportActionBar( toolbar );
@@ -96,10 +131,36 @@ public class BookListActivity extends AppCompatActivity{
 
 
     @Override
+    protected void onResume(){
+        super.onResume();
+        mReceiver.registerSelf( this );
+    }
+
+
+    @Override
     protected void onPause(){
         super.onPause();
-
+        mReceiver.unregisterSelf( this );
     }
+
+
+    @Override
+    protected void onStart(){
+        super.onStart();
+        Intent intent = new Intent( this, DboxService.class );
+        if(mService == null){
+        // Bind to LocalService only if not already done
+            bindService( intent, mServiceConnection, Context.BIND_AUTO_CREATE );
+        }
+    }
+
+
+    @Override
+    protected void onDestroy(){
+        super.onDestroy();
+        unbindService( mServiceConnection );
+    }
+
 
     // ----------------------------------------------------
 
@@ -107,19 +168,34 @@ public class BookListActivity extends AppCompatActivity{
     /**
      * Set RecyclerView's LayoutManager
      */
-    public void setRecyclerViewLayoutManager( RecyclerView recyclerView ){
-        int scrollPosition = 0;
+    public void setRecyclerViewLayoutManager( RecyclerView recyclerView, RecyclerView.Adapter adapter ){
 
-        // If a layout manager has already been set, get current scroll position.
-        if( recyclerView.getLayoutManager() != null ){
-            scrollPosition = ( ( LinearLayoutManager ) recyclerView.getLayoutManager() )
-                    .findFirstCompletelyVisibleItemPosition();
-        }
+        // ---------- init recycler
 
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager( this );
-
         recyclerView.setLayoutManager( linearLayoutManager );
+        recyclerView.setAdapter( adapter );
+
+        int scrollPosition = linearLayoutManager.findFirstCompletelyVisibleItemPosition();
         recyclerView.scrollToPosition( scrollPosition );
+
+        // ---------- set index on the right
+
+        VerticalRecyclerViewFastScroller fastScroller = ( VerticalRecyclerViewFastScroller ) findViewById( R.id
+                .fast_scroller );
+
+        // Connect the recycler to the scroller (to let the scroller scroll the list)
+        fastScroller.setRecyclerView( recyclerView );
+
+        // Connect the scroller to the recycler (to let the recycler scroll the scroller's handle)
+        recyclerView.addOnScrollListener( fastScroller.getOnScrollListener() );
+
+        // Connect the section indicator to the scroller
+        SectionIndicator sectionTitleIndicator = ( SectionIndicator ) findViewById( R.id
+                .fast_scroller_section_title_indicator );
+
+        fastScroller.setSectionIndicator( sectionTitleIndicator );
+
     }
 
 
@@ -130,13 +206,20 @@ public class BookListActivity extends AppCompatActivity{
         private final List<Book> mBooksList;
 
 
-        public BooksAdapter( Collection<Book> items ){
-            this( new ArrayList<>( items ) );
+        public BooksAdapter( List<Book> items ){
+            mBooksList = items;
         }
 
 
-        public BooksAdapter( List<Book> items ){
-            mBooksList = items;
+        public BooksAdapter(){
+            mBooksList = new ArrayList<>();
+        }
+
+
+        public void setBooksList( List<Book> books ){
+            mBooksList.clear();
+            mBooksList.addAll( books );
+            notifyDataSetChanged();
         }
 
 
@@ -149,6 +232,7 @@ public class BookListActivity extends AppCompatActivity{
 
         @Override
         public void onBindViewHolder( final ViewHolder holder, int position ){
+
             holder.mBook = mBooksList.get( position );
             holder.mTitleView.setText( holder.mBook.title );
             holder.mAuthorView.setText( holder.mBook.author );
@@ -167,6 +251,7 @@ public class BookListActivity extends AppCompatActivity{
                         // todo: don't destroy current activity
                         Context context = v.getContext();
                         Intent intent = new Intent( context, BookDetailActivity.class );
+                        intent.setFlags( Intent.FLAG_ACTIVITY_REORDER_TO_FRONT );
                         intent.putExtra( BookDetailFragment.ARG_BOOK, holder.mBook );
 
                         context.startActivity( intent );
