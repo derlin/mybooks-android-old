@@ -4,6 +4,9 @@ import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
+import ch.derlin.mybooks.R;
+import ch.derlin.mybooks.service.DboxBroadcastReceiver;
 import ch.derlin.mybooks.service.DboxService;
 
 public class StartActivity extends AppCompatActivity{
@@ -11,15 +14,23 @@ public class StartActivity extends AppCompatActivity{
     // In the class declaration section:
     //    private DropboxAPI<AndroidAuthSession> mDBApi;
 
+    private DboxBroadcastReceiver mReceiver = new DboxBroadcastReceiver(){
+
+        @Override
+        protected void onBooksChanged(String rev){
+            startApp();
+        }
+    };
+
 
     @Override
     protected void onCreate( Bundle savedInstanceState ){
         super.onCreate( savedInstanceState );
         waitForService();
 
-        //        setContentView( R.layout.activity_start );
-        //        Toolbar toolbar = ( Toolbar ) findViewById( R.id.toolbar );
-        //        setSupportActionBar( toolbar );
+        setContentView( R.layout.activity_start );
+        Toolbar toolbar = ( Toolbar ) findViewById( R.id.toolbar );
+        setSupportActionBar( toolbar );
     }
 
 
@@ -41,7 +52,7 @@ public class StartActivity extends AppCompatActivity{
                 // if not authenticated yet, start the process
                 if( DboxService.getInstance().startAuth( StartActivity.this ) ){
                     // returns true only if already authenticated.
-                    startApp();
+                    DboxService.getInstance().startDownload();
                 }
 
                 return null;
@@ -52,12 +63,20 @@ public class StartActivity extends AppCompatActivity{
 
 
     @Override
+    protected void onPause(){
+        super.onPause();
+        mReceiver.unregisterSelf( this );
+    }
+
+
+    @Override
     protected void onResume(){
         super.onResume();
         if( DboxService.getInstance() != null ){
             DboxService.getInstance().finishAuth();
-            startApp();
+            DboxService.getInstance().startDownload();
         }
+        mReceiver.registerSelf( this );
     }
 
 

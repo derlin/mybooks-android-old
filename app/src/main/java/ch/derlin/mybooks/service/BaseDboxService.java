@@ -24,14 +24,6 @@ public class BaseDboxService extends Service{
 
     // In the class declaration section:
     protected DropboxAPI<AndroidAuthSession> mDBApi;
-    private static BaseDboxService INSTANCE;
-
-
-    //-------------------------------------------------------------
-    public static BaseDboxService getInstance(){
-        return INSTANCE;
-    }
-    //-------------------------------------------------------------
 
     private final IBinder myBinder = new BTBinder();
 
@@ -58,20 +50,6 @@ public class BaseDboxService extends Service{
     @Override
     public int onStartCommand( Intent intent, int flags, int startId ){
         return super.onStartCommand( intent, flags, startId );
-    }
-
-
-    @Override
-    public void onCreate(){
-        super.onCreate();
-        INSTANCE = this;
-    }
-
-
-    @Override
-    public void onDestroy(){
-        INSTANCE = null;
-        super.onDestroy();
     }
 
     // ----------------------------------------------------

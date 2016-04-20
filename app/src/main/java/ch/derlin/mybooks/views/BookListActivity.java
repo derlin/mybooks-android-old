@@ -23,7 +23,6 @@ import xyz.danoz.recyclerviewfastscroller.vertical.VerticalRecyclerViewFastScrol
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 
 /**
  * An activity representing a list of Books. This activity
@@ -42,28 +41,19 @@ public class BookListActivity extends AppCompatActivity{
      */
     private boolean mTwoPane;
 
-    private Map<String, Book> mBooksMap;
-
-    private static final String DBX_PATH = "mybooks.json";
-
+    private DboxService mService;
 
     @Override
     protected void onCreate( Bundle savedInstanceState ){
         super.onCreate( savedInstanceState );
         setContentView( R.layout.activity_book_list );
 
-        //        if( !getDbxFile() ){
-        //            // todo: show error
-        //            return;
-        //        }
-        //        parseBooksFile();
-
-        mBooksMap = DboxService.getInstance().getBooks();
+        mService = DboxService.getInstance();
 
         // setup recyclerview (listview)
         RecyclerView recyclerView = ( RecyclerView ) findViewById( R.id.book_list );
         assert recyclerView != null;
-        recyclerView.setAdapter( new BooksAdapter( mBooksMap.values() ) );
+        recyclerView.setAdapter( new BooksAdapter( mService.getBooks() ) );
 
         VerticalRecyclerViewFastScroller fastScroller = ( VerticalRecyclerViewFastScroller ) findViewById( R.id
                 .fast_scroller );
@@ -131,20 +121,6 @@ public class BookListActivity extends AppCompatActivity{
         recyclerView.setLayoutManager( linearLayoutManager );
         recyclerView.scrollToPosition( scrollPosition );
     }
-    // ----------------------------------------------------
-
-
-    private boolean getDbxFile(){
-
-
-        return false;
-    }
-
-
-    private boolean parseBooksFile(){
-
-        return false;
-    }
 
 
     // ----------------------------------------------------
@@ -155,7 +131,7 @@ public class BookListActivity extends AppCompatActivity{
 
 
         public BooksAdapter( Collection<Book> items ){
-            this( new ArrayList<Book>( items ) );
+            this( new ArrayList<>( items ) );
         }
 
 
