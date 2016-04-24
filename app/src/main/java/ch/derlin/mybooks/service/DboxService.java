@@ -140,8 +140,8 @@ public class DboxService extends BaseDboxService{
         String key = Book.normalizeKey( title );
         if( !mBooks.containsKey( key ) ) return false;
         Map<String, Book> updated = new TreeMap<>( mBooks );
-        updated.remove( key );
-        startUpload( updated );
+        Book delBook = updated.remove( key );
+        startUpload( updated, delBook );
         return true;
     }
 
@@ -195,8 +195,13 @@ public class DboxService extends BaseDboxService{
 
 
     public boolean startUpload( Map<String, Book> updated ){
+        return startUpload( updated, null );
+    }
+
+
+    public boolean startUpload( Map<String, Book> updated, Book delBook ){
         if( mUpdateFileThread == null ){
-            mUpdateFileThread = new Thread( new RunnableUpdate( updated ) );
+            mUpdateFileThread = new Thread( new RunnableUpdate( updated, delBook ) );
             mUpdateFileThread.start();
             return true;
         }
@@ -209,10 +214,12 @@ public class DboxService extends BaseDboxService{
     private class RunnableUpdate implements Runnable{
 
         Map<String, Book> updatedBooks;
+        Book delBook;
 
 
-        public RunnableUpdate( Map<String, Book> updatedBooks ){
+        public RunnableUpdate( Map<String, Book> updatedBooks, Book delBook ){
             this.updatedBooks = updatedBooks;
+            this.delBook = delBook;
         }
 
 
@@ -233,7 +240,11 @@ public class DboxService extends BaseDboxService{
                     mLatestRev = entry.rev;
                     setBooks( updatedBooks );
                     notifyBooksChanged();
-                    notifyUploadOk();
+                    if( delBook != null ){
+                        notifyBookDeleted( delBook );
+                    }else{
+                        notifyUploadOk();
+                    }
                 }
 
             }catch( Exception e ){
@@ -291,6 +302,14 @@ public class DboxService extends BaseDboxService{
         // add an extra to the broadcast
         Intent i = getIntent( DBXS_EVT_BOOKS_CHANGED );
         i.putExtra( DBXS_EXTRA_REV_KEY, mLatestRev );
+        mBroadcastManager.sendBroadcast( i );
+    }
+
+
+    protected void notifyBookDeleted( Book book ){
+        // add an extra to the broadcast
+        Intent i = getIntent( DBXS_EVT_BOOK_DELETED );
+        i.putExtra( DBXS_EXTRA_BOOK_KEY, book );
         mBroadcastManager.sendBroadcast( i );
     }
 

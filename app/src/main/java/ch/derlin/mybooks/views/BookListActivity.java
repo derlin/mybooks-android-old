@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
+import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -53,6 +54,8 @@ public class BookListActivity extends AppCompatActivity{
     private DboxService mService;
     private String mRev;
 
+    private FloatingActionButton mFab;
+
     // ----------------------------------------------------
 
     private DboxBroadcastReceiver mReceiver = new DboxBroadcastReceiver(){
@@ -73,6 +76,17 @@ public class BookListActivity extends AppCompatActivity{
         @Override
         protected void onUploadOk(){
             Toast.makeText( BookListActivity.this, "upload done.", Toast.LENGTH_LONG ).show();
+        }
+
+
+        @Override
+        public void onBookDeleted( final Book book ){
+            Snackbar.make( mFab, "book deleted.", Snackbar.LENGTH_LONG ).setAction( "undo", new View.OnClickListener(){
+                @Override
+                public void onClick( View v ){
+                    mService.addBook( book );
+                }
+            } ).show();
         }
     };
 
@@ -102,8 +116,8 @@ public class BookListActivity extends AppCompatActivity{
         setSupportActionBar( toolbar );
         toolbar.setTitle( getTitle() );
 
-        FloatingActionButton fab = ( FloatingActionButton ) findViewById( R.id.fab );
-        fab.setOnClickListener( new View.OnClickListener(){
+        mFab = ( FloatingActionButton ) findViewById( R.id.fab );
+        mFab.setOnClickListener( new View.OnClickListener(){
             @Override
             public void onClick( View view ){
                 if( mTwoPane ){
@@ -194,7 +208,6 @@ public class BookListActivity extends AppCompatActivity{
     public class BooksAdapter extends RecyclerView.Adapter<BooksAdapter.ViewHolder> implements SectionIndexer{
 
         private final List<Book> mBooksList;
-
 
 
         public BooksAdapter( List<Book> items ){

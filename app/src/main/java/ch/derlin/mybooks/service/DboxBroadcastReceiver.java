@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.support.v4.content.LocalBroadcastManager;
+import ch.derlin.mybooks.books.Book;
 
 import static ch.derlin.mybooks.service.DboxConstants.*;
 
@@ -33,6 +34,9 @@ public class DboxBroadcastReceiver extends BroadcastReceiver{
                 break;
             case DBXS_EVT_ERROR:
                 onError( intent.getStringExtra( DBXS_EXTRA_MSG_KEY ) );
+                break;
+            case DBXS_EVT_BOOK_DELETED:
+                onBookDeleted( ( Book ) intent.getParcelableExtra( DBXS_EXTRA_BOOK_KEY ) );
                 break;
         }
     }
@@ -73,4 +77,10 @@ public class DboxBroadcastReceiver extends BroadcastReceiver{
     protected void onUploadOk(){
         // pass
     }
+
+
+    public void onBookDeleted( Book book ){
+
+    }
+
 }
