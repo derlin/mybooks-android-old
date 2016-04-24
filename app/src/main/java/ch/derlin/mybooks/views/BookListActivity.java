@@ -1,13 +1,9 @@
 package ch.derlin.mybooks.views;
 
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.content.ServiceConnection;
 import android.os.Bundle;
-import android.os.IBinder;
 import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -18,6 +14,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.SectionIndexer;
 import android.widget.TextView;
+import android.widget.Toast;
 import ch.derlin.mybooks.R;
 import ch.derlin.mybooks.books.Book;
 import ch.derlin.mybooks.service.DboxBroadcastReceiver;
@@ -47,52 +44,31 @@ public class BookListActivity extends AppCompatActivity{
      */
     private boolean mTwoPane;
     private BooksAdapter mAdapter;
-    private View mView;
 
     private int ADD_REQUEST_CODE = 0;
     private int EDIT_REQUEST_CODE = 1;
 
-
-    // ----------------------------------------------------
-
     private DboxService mService;
-
-    private ServiceConnection mServiceConnection = new ServiceConnection(){
-
-        @Override
-        public void onServiceConnected( ComponentName name, IBinder service ){
-            mService = ( ( DboxService.DbxBinder ) service ).getService();
-            mService.openFile();
-        }
-
-
-        @Override
-        public void onServiceDisconnected( ComponentName name ){
-            mService.closeFile();
-            mService = null;
-        }
-    };
 
     // ----------------------------------------------------
 
     private DboxBroadcastReceiver mReceiver = new DboxBroadcastReceiver(){
         @Override
         protected void onBooksChanged( String rev ){
-            assert mService.getBooks() != null;
-            if( mView != null ) Snackbar.make( mView, "Books updated", Snackbar.LENGTH_SHORT ).show();
+            Toast.makeText( BookListActivity.this, "Books updated", Toast.LENGTH_SHORT ).show();
             mAdapter.setBooksList( mService.getBooks() );
         }
 
 
         @Override
         protected void onError( String msg ){
-            if( mView != null ) Snackbar.make( mView, msg, Snackbar.LENGTH_LONG ).show();
+            Toast.makeText( BookListActivity.this, msg, Toast.LENGTH_LONG ).show();
         }
 
 
         @Override
         protected void onUploadOk(){
-            if( mView != null ) Snackbar.make( mView, "upload done.", Snackbar.LENGTH_LONG ).show();
+            Toast.makeText( BookListActivity.this, "upload done.", Toast.LENGTH_LONG ).show();
         }
     };
 
@@ -103,10 +79,11 @@ public class BookListActivity extends AppCompatActivity{
     protected void onCreate( Bundle savedInstanceState ){
         super.onCreate( savedInstanceState );
         setContentView( R.layout.activity_book_list );
-        mView = findViewById( android.R.id.content );
 
         // setup recyclerview (listview)
         RecyclerView recyclerView = ( RecyclerView ) findViewById( R.id.book_list );
+
+        mService = DboxService.getInstance();
 
         if( mService != null && mService.getBooks() != null ){
             mAdapter = new BooksAdapter( mService.getBooks() );
@@ -156,24 +133,6 @@ public class BookListActivity extends AppCompatActivity{
     protected void onPause(){
         super.onPause();
         mReceiver.unregisterSelf( this );
-    }
-
-
-    @Override
-    protected void onStart(){
-        super.onStart();
-        Intent intent = new Intent( this, DboxService.class );
-        if( mService == null ){
-            // Bind to LocalService only if not already done
-            bindService( intent, mServiceConnection, Context.BIND_AUTO_CREATE );
-        }
-    }
-
-
-    @Override
-    protected void onDestroy(){
-        super.onDestroy();
-        unbindService( mServiceConnection );
     }
 
 

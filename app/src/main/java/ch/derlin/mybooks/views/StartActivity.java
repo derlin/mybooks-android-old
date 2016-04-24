@@ -8,14 +8,16 @@ import android.os.Bundle;
 import android.os.IBinder;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.widget.Toast;
 import ch.derlin.mybooks.R;
+import ch.derlin.mybooks.service.DboxBroadcastReceiver;
 import ch.derlin.mybooks.service.DboxService;
 
 public class StartActivity extends AppCompatActivity{
 
 
     private DboxService mDboxService;
-
+    private boolean mIsAuthenticating = false;
     // ----------------------------------------------------
 
     private ServiceConnection mServiceConnection = new ServiceConnection(){
@@ -31,6 +33,20 @@ public class StartActivity extends AppCompatActivity{
             mDboxService = null;
         }
     };
+
+    private DboxBroadcastReceiver mReceiver = new DboxBroadcastReceiver(){
+        @Override
+        protected void onBooksChanged( String rev ){
+            startApp();
+        }
+
+
+        @Override
+        protected void onError( String msg ){
+            Toast.makeText( StartActivity.this, "Error: " + msg, Toast.LENGTH_LONG ).show();
+        }
+    };
+
 
     // ----------------------------------------------------
 
@@ -62,6 +78,7 @@ public class StartActivity extends AppCompatActivity{
 
     @Override
     protected void onPause(){
+        mReceiver.unregisterSelf( this );
         super.onPause();
     }
 
@@ -69,9 +86,10 @@ public class StartActivity extends AppCompatActivity{
     @Override
     protected void onResume(){
         super.onResume();
-        if( mDboxService != null ){
+        mReceiver.registerSelf( this );
+        if( mDboxService != null && mIsAuthenticating ){
             mDboxService.finishAuth();
-            startApp();
+            mIsAuthenticating = false;
         }
     }
 
@@ -79,10 +97,13 @@ public class StartActivity extends AppCompatActivity{
 
 
     private void onServiceBound(){
+        mIsAuthenticating = true;
         if( mDboxService.startAuth( this ) ){
             // returns true only if already authenticated
             startApp();
-        }// else, a dbx activity will be launched --> see the on resume
+        }else{
+            // else, a dbx activity will be launched --> see the on resume
+        }
     }
 
 

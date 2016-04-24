@@ -28,6 +28,7 @@ public class BookDetailActivity extends AppCompatActivity{
         setSupportActionBar( toolbar );
 
         FloatingActionButton fab = ( FloatingActionButton ) findViewById( R.id.fab );
+        fab.setImageDrawable( getResources().getDrawable( android.R.drawable.ic_menu_edit, getTheme() ) );
         fab.setOnClickListener( new View.OnClickListener(){
             @Override
             public void onClick( View view ){

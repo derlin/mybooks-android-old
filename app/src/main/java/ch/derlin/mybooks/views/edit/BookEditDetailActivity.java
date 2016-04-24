@@ -31,7 +31,7 @@ public class BookEditDetailActivity extends AppCompatActivity implements IFab{
         setSupportActionBar( toolbar );
 
         fab = ( FloatingActionButton ) findViewById( R.id.fab );
-        fab.setBackgroundDrawable( getResources().getDrawable( android.R.drawable.ic_menu_save, getTheme() ) );
+        fab.setImageDrawable( getResources().getDrawable( android.R.drawable.ic_menu_save, getTheme() ) );
 
         // Show the Up button in the action bar.
         ActionBar actionBar = getSupportActionBar();

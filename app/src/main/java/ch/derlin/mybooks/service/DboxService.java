@@ -1,5 +1,6 @@
 package ch.derlin.mybooks.service;
 
+import android.content.Context;
 import android.content.Intent;
 import android.os.Binder;
 import android.os.IBinder;
@@ -15,9 +16,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileReader;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static ch.derlin.mybooks.service.DboxConstants.*;
 
@@ -35,7 +34,6 @@ public class DboxService extends BaseDboxService{
     private Gson mGson = new GsonBuilder().create();
     private Map<String, Book> mBooks;
     private String mLatestRev;
-    private boolean mFileOpened = false;
     private Thread mGetFileThread = null, mUpdateFileThread = null;
 
     // ----------------------------------------------------
@@ -91,25 +89,20 @@ public class DboxService extends BaseDboxService{
     // ----------------------------------------------------
 
 
-    public boolean isFileOpened(){
-        return mFileOpened;
-    }
-
-
     public List<Book> getBooks(){
-        return mFileOpened && mBooks != null ?  //
+        return mBooks != null ?  //
                 new ArrayList<>( mBooks.values() ) : null;
     }
 
 
     public List<String> getTitles(){
-        return mFileOpened && mBooks != null ?  //
+        return mBooks != null ?  //
                 new ArrayList<>( mBooks.keySet() ) : null;
     }
 
 
     public Book getBook( String title ){
-        return mFileOpened && mBooks != null ?  //
+        return mBooks != null ?  //
                 mBooks.get( title ) : null;
     }
 
@@ -118,37 +111,67 @@ public class DboxService extends BaseDboxService{
         return mLatestRev;
     }
 
+    // ----------------------------------------------------
 
-    public boolean editBook( String oldTitle, Book book ){
+
+    public synchronized boolean editBook( String oldTitle, Book book ){
         if( !mBooks.containsKey( Book.normalizeKey( oldTitle ) ) ) return false;
 
+        Map<String, Book> updated = new TreeMap<>( mBooks );
+
         if( oldTitle.compareTo( book.title ) != 0 ){
-            mBooks.remove( oldTitle );
+            updated.remove( oldTitle );
         }
-        mBooks.put( book.getNormalizedKey(), book );
-        startUpload();
+        updated.put( book.getNormalizedKey(), book );
+        startUpload( updated );
         return true;
     }
 
 
-    public void addBook( Book book ){
-        mBooks.put( book.getNormalizedKey(), book );
-        startUpload();
+    public synchronized void addBook( Book book ){
+        Map<String, Book> updated = new TreeMap<>( mBooks );
+        updated.put( book.getNormalizedKey(), book );
+        startUpload( updated );
     }
 
 
-    public boolean deleteBook( String title ){
+    public synchronized boolean deleteBook( String title ){
         String key = Book.normalizeKey( title );
         if( !mBooks.containsKey( key ) ) return false;
-        mBooks.remove( key );
-        startUpload();
+        Map<String, Book> updated = new TreeMap<>( mBooks );
+        updated.remove( key );
+        startUpload( updated );
         return true;
+    }
+
+
+    private synchronized void setBooks( Map<String, Book> updated ){
+        mBooks = updated;
     }
 
     // ----------------------------------------------------
 
 
-    public boolean openFile(){
+    @Override
+    public boolean startAuth( Context callingActivity ){
+        boolean isAuth = super.startAuth( callingActivity );
+        if( isAuth ){
+            // already linked
+            openFile();
+        }
+        return isAuth;
+    }
+
+
+    @Override
+    public void finishAuth(){
+        super.finishAuth();
+        openFile();
+    }
+
+
+    private boolean openFile(){
+
         if( mGetFileThread == null ){
             mGetFileThread = new Thread( new RunnableGetFile() );
             mGetFileThread.start();
@@ -158,23 +181,21 @@ public class DboxService extends BaseDboxService{
     }
 
 
-    public void closeFile(){
-        if( mGetFileThread != null ){
-            mGetFileThread.interrupt();
-            mGetFileThread = null;
-        }
-        if( mUpdateFileThread != null ){
-            mUpdateFileThread.interrupt();
-            mUpdateFileThread = null;
-        }
-
-        mFileOpened = false;
-    }
+    //    private void closeFile(){
+    //        if( mGetFileThread != null ){
+    //            mGetFileThread.interrupt();
+    //            mGetFileThread = null;
+    //        }
+    //        if( mUpdateFileThread != null ){
+    //            mUpdateFileThread.interrupt();
+    //            mUpdateFileThread = null;
+    //        }
+    //    }
 
 
-    public boolean startUpload(){
+    public boolean startUpload( Map<String, Book> updated ){
         if( mUpdateFileThread == null ){
-            mUpdateFileThread = new Thread( new RunnableUpdate() );
+            mUpdateFileThread = new Thread( new RunnableUpdate( updated ) );
             mUpdateFileThread.start();
             return true;
         }
@@ -185,6 +206,15 @@ public class DboxService extends BaseDboxService{
 
 
     private class RunnableUpdate implements Runnable{
+
+        Map<String, Book> updatedBooks;
+
+
+        public RunnableUpdate( Map<String, Book> updatedBooks ){
+            this.updatedBooks = updatedBooks;
+        }
+
+
         public void run(){
 
             File file = null;
@@ -194,12 +224,13 @@ public class DboxService extends BaseDboxService{
                 file = File.createTempFile( "mybooks", "json" );
 
                 try( FileOutputStream out = new FileOutputStream( file ) ){
-                    String json = mGson.toJson( mBooks );
+                    String json = mGson.toJson( updatedBooks );
                     out.write( json.getBytes() );
                     DropboxAPI.Entry entry = mDBApi.putFileOverwrite( BOOKS_FILE_PATH, new FileInputStream( file ),
                             file.length(), null );
 
                     mLatestRev = entry.rev;
+                    setBooks( updatedBooks );
                     notifyBooksChanged();
                     notifyUploadOk();
                 }
@@ -234,7 +265,6 @@ public class DboxService extends BaseDboxService{
                     // there is actually a change
                     mBooks = mGson.fromJson( new FileReader( file ), new TypeToken<Map<String, Book>>(){}.getType() );
                     if( mBooks != null ){
-                        mFileOpened = true;
                         notifyBooksChanged();
                     }
                 }
