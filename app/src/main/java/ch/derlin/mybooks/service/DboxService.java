@@ -31,7 +31,7 @@ public class DboxService extends BaseDboxService{
     private static final String BOOKS_FILE_PATH = "/mybooks.json";
     protected LocalBroadcastManager mBroadcastManager;
 
-    private Gson mGson = new GsonBuilder().create();
+    private Gson mGson = new GsonBuilder().setPrettyPrinting().create();
     private Map<String, Book> mBooks;
     private String mLatestRev;
     private Thread mGetFileThread = null, mUpdateFileThread = null;
@@ -103,7 +103,7 @@ public class DboxService extends BaseDboxService{
 
     public Book getBook( String title ){
         return mBooks != null ?  //
-                mBooks.get( title ) : null;
+                mBooks.get( Book.normalizeKey( title ) ) : null;
     }
 
 
@@ -115,12 +115,13 @@ public class DboxService extends BaseDboxService{
 
 
     public synchronized boolean editBook( String oldTitle, Book book ){
-        if( !mBooks.containsKey( Book.normalizeKey( oldTitle ) ) ) return false;
+        String oldKey = Book.normalizeKey( oldTitle );
+        if( !mBooks.containsKey( oldKey ) ) return false;
 
         Map<String, Book> updated = new TreeMap<>( mBooks );
 
         if( oldTitle.compareTo( book.title ) != 0 ){
-            updated.remove( oldTitle );
+            updated.remove( oldKey );
         }
         updated.put( book.getNormalizedKey(), book );
         startUpload( updated );
@@ -261,9 +262,10 @@ public class DboxService extends BaseDboxService{
                 DropboxAPI.DropboxFileInfo info = mDBApi.getFile( BOOKS_FILE_PATH, null, outputStream, null );
                 String rev = info.getMetadata().rev;
 
-                if( mLatestRev == null || mLatestRev.equals( rev ) ){
+                if( mLatestRev == null || !mLatestRev.equals( rev ) ){
                     // there is actually a change
                     mBooks = mGson.fromJson( new FileReader( file ), new TypeToken<Map<String, Book>>(){}.getType() );
+                    mLatestRev = rev;
                     if( mBooks != null ){
                         notifyBooksChanged();
                     }

@@ -38,6 +38,8 @@ import java.util.List;
  */
 public class BookListActivity extends AppCompatActivity{
 
+    public static final String ARG_BOOK_TITLE = "book_title";
+
     /**
      * Whether or not the activity is in two-pane mode, i.e. running on a tablet
      * device.
@@ -49,12 +51,14 @@ public class BookListActivity extends AppCompatActivity{
     private int EDIT_REQUEST_CODE = 1;
 
     private DboxService mService;
+    private String mRev;
 
     // ----------------------------------------------------
 
     private DboxBroadcastReceiver mReceiver = new DboxBroadcastReceiver(){
         @Override
         protected void onBooksChanged( String rev ){
+            mRev = rev;
             Toast.makeText( BookListActivity.this, "Books updated", Toast.LENGTH_SHORT ).show();
             mAdapter.setBooksList( mService.getBooks() );
         }
@@ -87,7 +91,7 @@ public class BookListActivity extends AppCompatActivity{
 
         if( mService != null && mService.getBooks() != null ){
             mAdapter = new BooksAdapter( mService.getBooks() );
-
+            mRev = mService.getLatestRev();
         }else{
             mAdapter = new BooksAdapter();
         }
@@ -126,6 +130,9 @@ public class BookListActivity extends AppCompatActivity{
     protected void onResume(){
         super.onResume();
         mReceiver.registerSelf( this );
+        if( mRev != null && !mRev.equals( mService.getLatestRev() ) ){
+            mAdapter.setBooksList( mService.getBooks() );
+        }
     }
 
 
@@ -189,8 +196,9 @@ public class BookListActivity extends AppCompatActivity{
         private final List<Book> mBooksList;
 
 
+
         public BooksAdapter( List<Book> items ){
-            mBooksList = items;
+            mBooksList = new ArrayList<>( items );
         }
 
 
@@ -225,7 +233,7 @@ public class BookListActivity extends AppCompatActivity{
                 public void onClick( View v ){
                     if( mTwoPane ){
                         Bundle arguments = new Bundle();
-                        arguments.putParcelable( BookDetailFragment.ARG_BOOK, holder.mBook );
+                        arguments.putString( BookListActivity.ARG_BOOK_TITLE, holder.mBook.title );
                         BookDetailFragment fragment = new BookDetailFragment();
                         fragment.setArguments( arguments );
                         getSupportFragmentManager().beginTransaction().replace( R.id.book_detail_container, fragment
@@ -235,7 +243,7 @@ public class BookListActivity extends AppCompatActivity{
                         Context context = v.getContext();
                         Intent intent = new Intent( context, BookDetailActivity.class );
                         intent.setFlags( Intent.FLAG_ACTIVITY_REORDER_TO_FRONT );
-                        intent.putExtra( BookDetailFragment.ARG_BOOK, holder.mBook );
+                        intent.putExtra( BookListActivity.ARG_BOOK_TITLE, holder.mBook.title );
 
                         context.startActivity( intent );
                     }

@@ -7,10 +7,11 @@ import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.MenuItem;
+import android.widget.Toast;
 import ch.derlin.mybooks.R;
+import ch.derlin.mybooks.service.DboxBroadcastReceiver;
 import ch.derlin.mybooks.views.BookListActivity;
 import ch.derlin.mybooks.views.IFab;
-import ch.derlin.mybooks.views.details.BookDetailFragment;
 
 /**
  * An activity representing a single Book detail screen. This
@@ -20,18 +21,41 @@ import ch.derlin.mybooks.views.details.BookDetailFragment;
  */
 public class BookEditDetailActivity extends AppCompatActivity implements IFab{
 
-    private FloatingActionButton fab;
+    private FloatingActionButton mFab;
+    private BookEditDetailActivity mActivity;
+    // ----------------------------------------------------
+
+    private DboxBroadcastReceiver mReceiver = new DboxBroadcastReceiver(){
+
+        @Override
+        protected void onError( String msg ){
+            Toast.makeText( mActivity, msg, Toast.LENGTH_LONG ).show();
+            mFab.setEnabled( true );
+        }
+
+
+        @Override
+        protected void onUploadOk(){
+            Toast.makeText( BookEditDetailActivity.this, "changes saved.", Toast.LENGTH_LONG ).show();
+            mActivity.setResult( Activity.RESULT_OK );
+            mActivity.finish();
+        }
+    };
+
+    // ----------------------------------------------------
 
 
     @Override
     protected void onCreate( Bundle savedInstanceState ){
         super.onCreate( savedInstanceState );
+        mActivity = this;
+
         setContentView( R.layout.activity_book_detail );
         Toolbar toolbar = ( Toolbar ) findViewById( R.id.detail_toolbar );
         setSupportActionBar( toolbar );
 
-        fab = ( FloatingActionButton ) findViewById( R.id.fab );
-        fab.setImageDrawable( getResources().getDrawable( android.R.drawable.ic_menu_save, getTheme() ) );
+        mFab = ( FloatingActionButton ) findViewById( R.id.fab );
+        mFab.setImageDrawable( getResources().getDrawable( android.R.drawable.ic_menu_save, getTheme() ) );
 
         // Show the Up button in the action bar.
         ActionBar actionBar = getSupportActionBar();
@@ -52,8 +76,9 @@ public class BookEditDetailActivity extends AppCompatActivity implements IFab{
             // Create the detail fragment and add it to the activity
             // using a fragment transaction.
             Bundle arguments = new Bundle();
-            arguments.putParcelable( BookDetailFragment.ARG_BOOK, getIntent().getParcelableExtra( BookDetailFragment
-                    .ARG_BOOK ) );
+            String bookTitle = getIntent().getStringExtra( BookListActivity.ARG_BOOK_TITLE );
+            setTitle( bookTitle == null ? "New Book" : bookTitle );
+            arguments.putString( BookListActivity.ARG_BOOK_TITLE, bookTitle );
             BookEditDetailFragment fragment = new BookEditDetailFragment();
             fragment.setArguments( arguments );
             getSupportFragmentManager().beginTransaction().add( R.id.book_detail_container, fragment ).commit();
@@ -63,7 +88,7 @@ public class BookEditDetailActivity extends AppCompatActivity implements IFab{
 
     @Override
     public FloatingActionButton getIFab(){
-        return fab;
+        return mFab;
     }
 
 
@@ -82,5 +107,19 @@ public class BookEditDetailActivity extends AppCompatActivity implements IFab{
             return true;
         }
         return super.onOptionsItemSelected( item );
+    }
+
+
+    @Override
+    protected void onResume(){
+        super.onResume();
+        mReceiver.registerSelf( this );
+    }
+
+
+    @Override
+    protected void onPause(){
+        mReceiver.unregisterSelf( this );
+        super.onPause();
     }
 }

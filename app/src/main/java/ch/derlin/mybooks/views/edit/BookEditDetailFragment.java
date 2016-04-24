@@ -25,19 +25,13 @@ import ch.derlin.mybooks.views.details.BookDetailActivity;
 public class BookEditDetailFragment extends Fragment implements View.OnClickListener{
 
     /**
-     * The fragment argument representing the item ID that this fragment
-     * represents.
-     */
-    public static final String ARG_BOOK = "book_parcel";
-
-    /**
      * The dummy content this fragment is presenting.
      */
     private Book mBook;
     private String mOldTitle;
 
     private EditText mEditTitle, mEditAuthor, mEditDate, mEditNotes;
-
+    private DboxService mService;
     // ----------------------------------------------------
 
 
@@ -53,12 +47,14 @@ public class BookEditDetailFragment extends Fragment implements View.OnClickList
     public void onCreate( Bundle savedInstanceState ){
         super.onCreate( savedInstanceState );
 
+
         Activity activity = this.getActivity();
+        mService = DboxService.getInstance();
 
         mBook = new Book();
-        if( activity.getIntent().hasExtra( ARG_BOOK ) ){
-            mBook = activity.getIntent().getParcelableExtra( ARG_BOOK );
-            mOldTitle = mBook.title;
+        if( activity.getIntent().hasExtra( BookListActivity.ARG_BOOK_TITLE ) ){
+            mOldTitle = activity.getIntent().getStringExtra( BookListActivity.ARG_BOOK_TITLE );
+            mBook = mService.getBook( mOldTitle );
         }
 
         CollapsingToolbarLayout appBarLayout = ( CollapsingToolbarLayout ) activity.findViewById( R.id.toolbar_layout );
@@ -102,11 +98,9 @@ public class BookEditDetailFragment extends Fragment implements View.OnClickList
             }
         }else{ // book to add
             service.addBook( mBook );
-
         }
 
-        getActivity().setResult( Activity.RESULT_OK );
-        getActivity().finish();
+        v.setEnabled( false );
     }
 
 
@@ -116,16 +110,22 @@ public class BookEditDetailFragment extends Fragment implements View.OnClickList
 
         if( mBook != null ){
             mEditTitle = ( ( EditText ) rootView.findViewById( R.id.details_title ) );
-            mEditTitle.setText( mBook.title );
             mEditAuthor = ( ( EditText ) rootView.findViewById( R.id.details_author ) );
-            mEditAuthor.setText( mBook.author );
             mEditDate = ( ( EditText ) rootView.findViewById( R.id.details_date ) );
-            mEditDate.setText( mBook.date );
             mEditNotes = ( ( EditText ) rootView.findViewById( R.id.details_notes ) );
-            mEditNotes.setText( mBook.notes );
         }
 
+        setBooksInfos();
+
         return rootView;
+    }
+
+
+    private void setBooksInfos(){
+            mEditTitle.setText( mBook.title );
+            mEditAuthor.setText( mBook.author );
+            mEditDate.setText( mBook.date );
+            mEditNotes.setText( mBook.notes );
     }
 
 }

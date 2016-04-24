@@ -10,6 +10,7 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 import ch.derlin.mybooks.R;
 import ch.derlin.mybooks.books.Book;
+import ch.derlin.mybooks.service.DboxService;
 import ch.derlin.mybooks.views.BookListActivity;
 
 /**
@@ -19,11 +20,6 @@ import ch.derlin.mybooks.views.BookListActivity;
  * on handsets.
  */
 public class BookDetailFragment extends Fragment{
-    /**
-     * The fragment argument representing the item ID that this fragment
-     * represents.
-     */
-    public static final String ARG_BOOK = "book_parcel";
 
     /**
      * The dummy content this fragment is presenting.
@@ -45,16 +41,17 @@ public class BookDetailFragment extends Fragment{
 
         Activity activity = this.getActivity();
 
-        if( activity.getIntent().hasExtra( ARG_BOOK ) ){
+        if( activity.getIntent().hasExtra( BookListActivity.ARG_BOOK_TITLE ) ){
             // Load the dummy content specified by the fragment
             // arguments. In a real-world scenario, use a Loader
             // to load content from a content provider.
-            mBook = activity.getIntent().getParcelableExtra( ARG_BOOK );
+            String title = activity.getIntent().getStringExtra( BookListActivity.ARG_BOOK_TITLE );
+            mBook = DboxService.getInstance().getBook( title );
 
             CollapsingToolbarLayout appBarLayout = ( CollapsingToolbarLayout ) activity.findViewById( R.id
                     .toolbar_layout );
             if( appBarLayout != null ){
-                appBarLayout.setTitle( mBook.title );
+                appBarLayout.setTitle( title );
             }
         }
     }
