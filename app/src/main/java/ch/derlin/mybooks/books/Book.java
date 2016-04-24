@@ -45,7 +45,7 @@ public class Book implements Parcelable{
                 .replace( "ù", "u" )//
                 .replace( "û", "u" );
 
-        key.replaceAll( "[^a-z0-9 ]", "" ).replaceAll( " +", " " );
+        key = key.replaceAll( "[^a-z0-9 ]", " " ).replaceAll( " +", " " );
         return key;
     }
 

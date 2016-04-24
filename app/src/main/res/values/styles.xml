@@ -57,6 +57,8 @@
     </style>
 
     <style name="details_value_edit" parent="details_value">
+        <item name="android:singleLine">true</item>
+        <item name="android:imeOptions">actionNext</item>
         <item name="android:textIsSelectable">false</item>
     </style>
 
