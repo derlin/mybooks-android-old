@@ -17,7 +17,16 @@
             android:launchMode="singleTop"
             android:theme="@style/AppTheme.NoActionBar" />
         <activity
-            android:name=".views.BookDetailActivity"
+            android:name=".views.details.BookDetailActivity"
+            android:label="@string/title_book_detail"
+            android:parentActivityName=".views.BookListActivity"
+            android:theme="@style/AppTheme.NoActionBar">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".views.BookListActivity" />
+        </activity>
+        <activity
+            android:name=".views.edit.BookEditDetailActivity"
             android:label="@string/title_book_detail"
             android:parentActivityName=".views.BookListActivity"
             android:theme="@style/AppTheme.NoActionBar">

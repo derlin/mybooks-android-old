@@ -1,4 +1,4 @@
-package ch.derlin.mybooks.views;
+package ch.derlin.mybooks.views.details;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -10,6 +10,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.app.ActionBar;
 import android.view.MenuItem;
 import ch.derlin.mybooks.R;
+import ch.derlin.mybooks.views.BookListActivity;
 
 /**
  * An activity representing a single Book detail screen. This

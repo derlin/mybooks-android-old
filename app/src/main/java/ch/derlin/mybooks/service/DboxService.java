@@ -59,15 +59,24 @@ public class DboxService extends BaseDboxService{
     }
     // ----------------------------------------------------
 
+    private static DboxService INSTANCE;
+
+
+    public static DboxService getInstance(){
+        return INSTANCE;
+    }
+
 
     @Override
     public void onCreate(){
         super.onCreate();
+        INSTANCE = this;
     }
 
 
     @Override
     public void onDestroy(){
+        INSTANCE = null;
         super.onDestroy();
     }
 
@@ -107,6 +116,33 @@ public class DboxService extends BaseDboxService{
 
     public String getLatestRev(){
         return mLatestRev;
+    }
+
+
+    public boolean editBook( String oldTitle, Book book ){
+        if( !mBooks.containsKey( Book.normalizeKey( oldTitle ) ) ) return false;
+
+        if( oldTitle.compareTo( book.title ) != 0 ){
+            mBooks.remove( oldTitle );
+        }
+        mBooks.put( book.getNormalizedKey(), book );
+        startUpload();
+        return true;
+    }
+
+
+    public void addBook( Book book ){
+        mBooks.put( book.getNormalizedKey(), book );
+        startUpload();
+    }
+
+
+    public boolean deleteBook( String title ){
+        String key = Book.normalizeKey( title );
+        if( !mBooks.containsKey( key ) ) return false;
+        mBooks.remove( key );
+        startUpload();
+        return true;
     }
 
     // ----------------------------------------------------
@@ -155,13 +191,13 @@ public class DboxService extends BaseDboxService{
 
             try{
 
-                File.createTempFile( "mybooks", "json" );
+                file = File.createTempFile( "mybooks", "json" );
 
                 try( FileOutputStream out = new FileOutputStream( file ) ){
                     String json = mGson.toJson( mBooks );
                     out.write( json.getBytes() );
-                    DropboxAPI.Entry entry = mDBApi.putFile( BOOKS_FILE_PATH, new FileInputStream( file ), file
-                            .length(), null, null );
+                    DropboxAPI.Entry entry = mDBApi.putFileOverwrite( BOOKS_FILE_PATH, new FileInputStream( file ),
+                            file.length(), null );
 
                     mLatestRev = entry.rev;
                     notifyBooksChanged();

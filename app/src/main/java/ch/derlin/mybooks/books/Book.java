@@ -19,7 +19,8 @@ public class Book implements Parcelable{
     public Book(){
     }
 
-    public Book(Parcel in){
+
+    public Book( Parcel in ){
         this.title = in.readString();
         this.author = in.readString();
         this.date = in.readString();
@@ -35,7 +36,8 @@ public class Book implements Parcelable{
 
 
     public static String normalizeKey( String key ){
-        key = key.replace( "é", "e" )//
+        key = key.toLowerCase() //
+                .replace( "é", "e" )//
                 .replace( "è", "e" )//
                 .replace( "ê", "e" )//
                 .replace( "à", "a" )//
@@ -49,6 +51,7 @@ public class Book implements Parcelable{
 
     // ----------------------------------------------------
 
+
     @Override
     public int describeContents(){
         return 0;
@@ -57,19 +60,21 @@ public class Book implements Parcelable{
 
     @Override
     public void writeToParcel( Parcel dest, int flags ){
-         dest.writeString( title );
-         dest.writeString( author );
-         dest.writeString( date );
-         dest.writeString( notes );
+        dest.writeString( title );
+        dest.writeString( author );
+        dest.writeString( date );
+        dest.writeString( notes );
     }
 
-    public static final Parcelable.Creator CREATOR = new Parcelable.Creator() {
-        public Book createFromParcel(Parcel in) {
-            return new Book(in);
+
+    public static final Parcelable.Creator CREATOR = new Parcelable.Creator(){
+        public Book createFromParcel( Parcel in ){
+            return new Book( in );
         }
 
-        public Book[] newArray(int size) {
-            return new Book[size];
+
+        public Book[] newArray( int size ){
+            return new Book[ size ];
         }
     };
 }

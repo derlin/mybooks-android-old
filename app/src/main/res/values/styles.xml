@@ -56,4 +56,8 @@
         <item name="android:textIsSelectable">true</item>
     </style>
 
+    <style name="details_value_edit" parent="details_value">
+        <item name="android:textIsSelectable">false</item>
+    </style>
+
 </resources>

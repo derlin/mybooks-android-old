@@ -1,4 +1,4 @@
-package ch.derlin.mybooks.views;
+package ch.derlin.mybooks.views.details;
 
 import android.app.Activity;
 import android.os.Bundle;
@@ -10,6 +10,7 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 import ch.derlin.mybooks.R;
 import ch.derlin.mybooks.books.Book;
+import ch.derlin.mybooks.views.BookListActivity;
 
 /**
  * A fragment representing a single Book detail screen.
@@ -65,7 +66,7 @@ public class BookDetailFragment extends Fragment{
 
         // Show the dummy content as text in a TextView.
         if( mBook != null ){
-//            ( ( TextView ) rootView.findViewById( R.id.details_title ) ).setText( mBook.title );
+            ( ( TextView ) rootView.findViewById( R.id.details_title ) ).setText( mBook.title );
             ( ( TextView ) rootView.findViewById( R.id.details_author ) ).setText( mBook.author );
             ( ( TextView ) rootView.findViewById( R.id.details_date ) ).setText( mBook.date );
             ( ( TextView ) rootView.findViewById( R.id.details_notes ) ).setText( mBook.notes );

@@ -12,6 +12,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -21,6 +22,9 @@ import ch.derlin.mybooks.R;
 import ch.derlin.mybooks.books.Book;
 import ch.derlin.mybooks.service.DboxBroadcastReceiver;
 import ch.derlin.mybooks.service.DboxService;
+import ch.derlin.mybooks.views.details.BookDetailActivity;
+import ch.derlin.mybooks.views.details.BookDetailFragment;
+import ch.derlin.mybooks.views.edit.BookEditDetailActivity;
 import xyz.danoz.recyclerviewfastscroller.sectionindicator.SectionIndicator;
 import xyz.danoz.recyclerviewfastscroller.vertical.VerticalRecyclerViewFastScroller;
 
@@ -43,6 +47,11 @@ public class BookListActivity extends AppCompatActivity{
      */
     private boolean mTwoPane;
     private BooksAdapter mAdapter;
+    private View mView;
+
+    private int ADD_REQUEST_CODE = 0;
+    private int EDIT_REQUEST_CODE = 1;
+
 
     // ----------------------------------------------------
 
@@ -70,19 +79,20 @@ public class BookListActivity extends AppCompatActivity{
         @Override
         protected void onBooksChanged( String rev ){
             assert mService.getBooks() != null;
+            if( mView != null ) Snackbar.make( mView, "Books updated", Snackbar.LENGTH_SHORT ).show();
             mAdapter.setBooksList( mService.getBooks() );
         }
 
 
         @Override
         protected void onError( String msg ){
-            Snackbar.make( null, msg, Snackbar.LENGTH_LONG ).show();
+            if( mView != null ) Snackbar.make( mView, msg, Snackbar.LENGTH_LONG ).show();
         }
 
 
         @Override
         protected void onUploadOk(){
-            Snackbar.make( null, "upload done.", Snackbar.LENGTH_LONG ).show();
+            if( mView != null ) Snackbar.make( mView, "upload done.", Snackbar.LENGTH_LONG ).show();
         }
     };
 
@@ -93,6 +103,7 @@ public class BookListActivity extends AppCompatActivity{
     protected void onCreate( Bundle savedInstanceState ){
         super.onCreate( savedInstanceState );
         setContentView( R.layout.activity_book_list );
+        mView = findViewById( android.R.id.content );
 
         // setup recyclerview (listview)
         RecyclerView recyclerView = ( RecyclerView ) findViewById( R.id.book_list );
@@ -114,8 +125,12 @@ public class BookListActivity extends AppCompatActivity{
         fab.setOnClickListener( new View.OnClickListener(){
             @Override
             public void onClick( View view ){
-                Snackbar.make( view, "Replace with your own action", Snackbar.LENGTH_LONG ).setAction( "Action", null
-                ).show();
+                if( mTwoPane ){
+                    // TODO
+                }else{
+                    Intent intent = new Intent( BookListActivity.this, BookEditDetailActivity.class );
+                    startActivityForResult( intent, ADD_REQUEST_CODE );
+                }
             }
         } );
 
@@ -148,8 +163,8 @@ public class BookListActivity extends AppCompatActivity{
     protected void onStart(){
         super.onStart();
         Intent intent = new Intent( this, DboxService.class );
-        if(mService == null){
-        // Bind to LocalService only if not already done
+        if( mService == null ){
+            // Bind to LocalService only if not already done
             bindService( intent, mServiceConnection, Context.BIND_AUTO_CREATE );
         }
     }
@@ -161,6 +176,15 @@ public class BookListActivity extends AppCompatActivity{
         unbindService( mServiceConnection );
     }
 
+
+    @Override
+    protected void onActivityResult( int requestCode, int resultCode, Intent data ){
+        if( requestCode == ADD_REQUEST_CODE || requestCode == EDIT_REQUEST_CODE ){
+            Log.d( getPackageName(), "Activity result " + resultCode );
+        }else{
+            super.onActivityResult( requestCode, resultCode, data );
+        }
+    }
 
     // ----------------------------------------------------
 
