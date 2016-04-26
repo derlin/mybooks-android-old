@@ -15,6 +15,7 @@ public class DboxConstants{
 
     public static final String DBXS_EVT_BOOKS_CHANGED = "dbxs_evt.books_changed";
     public static final String DBXS_EVT_UPLOAD_OK = "dbxs_evt.upload_ok";
+    public static final String DBXS_EVT_BOOKS_ON_SYNC = "dbxs_evt.books_on_sync";
     public static final String DBXS_EVT_ERROR = "dbxs_evt.error";
     public static final String DBXS_EVT_BOOK_DELETED = "dbxs_evt.deletion";
 

@@ -8,11 +8,10 @@ import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
+import android.view.*;
 import android.widget.SectionIndexer;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -54,6 +53,7 @@ public class BookListActivity extends AppCompatActivity{
     private DboxService mService;
     private String mRev;
 
+    private boolean mFirstLoad = true;
     private FloatingActionButton mFab;
 
     // ----------------------------------------------------
@@ -62,8 +62,9 @@ public class BookListActivity extends AppCompatActivity{
         @Override
         protected void onBooksChanged( String rev ){
             mRev = rev;
-            Toast.makeText( BookListActivity.this, "Books updated", Toast.LENGTH_SHORT ).show();
+            if( !mFirstLoad ) Snackbar.make( mFab, "External changes. Updating.", Snackbar.LENGTH_LONG ).show();
             mAdapter.setBooksList( mService.getBooks() );
+            mFirstLoad = true;
         }
 
 
@@ -75,7 +76,13 @@ public class BookListActivity extends AppCompatActivity{
 
         @Override
         protected void onUploadOk(){
-            Toast.makeText( BookListActivity.this, "upload done.", Toast.LENGTH_LONG ).show();
+            Snackbar.make( mFab, "Changes saved.", Snackbar.LENGTH_LONG ).show();
+        }
+
+
+        @Override
+        protected void onBooksUnchanged(){
+            Snackbar.make( mFab, "Books up to date.", Snackbar.LENGTH_LONG ).show();
         }
 
 
@@ -202,6 +209,49 @@ public class BookListActivity extends AppCompatActivity{
 
     }
 
+
+    // ----------------------------------------------------
+    @Override
+    public boolean onCreateOptionsMenu( Menu menu ){
+        getMenuInflater().inflate( R.menu.toolbar_menu, menu );
+
+        final MenuItem searchMenuItem = menu.findItem( R.id.action_search );
+        final SearchView searchView = ( SearchView ) searchMenuItem.getActionView();
+        searchView.setOnQueryTextListener( new SearchView.OnQueryTextListener(){
+            @Override
+            public boolean onQueryTextSubmit( String query ){
+                // todo
+                Toast.makeText( BookListActivity.this, "searching for " + query, Toast.LENGTH_SHORT ).show();
+                if( !searchView.isIconified() ){
+                    searchView.setIconified( true );
+                }
+                searchMenuItem.collapseActionView();
+                return false;
+            }
+
+
+            @Override
+            public boolean onQueryTextChange( String s ){
+                return false;
+            }
+        } );
+        return true;
+    }
+
+
+    @Override
+    public boolean onOptionsItemSelected( MenuItem item ){
+        // Handle action bar item clicks here. The action bar will
+        // automatically handle clicks on the Home/Up button, so long
+        // as you specify a parent activity in AndroidManifest.xml.
+        int id = item.getItemId();
+        if( id == R.id.action_sync ){
+            mService.startFetchBooks();
+            Toast.makeText( this, "checking Dropbox server...", Toast.LENGTH_SHORT ).show();
+            return true;
+        }
+        return super.onOptionsItemSelected( item );
+    }
 
     // ----------------------------------------------------
 

@@ -32,6 +32,9 @@ public class DboxBroadcastReceiver extends BroadcastReceiver{
             case DBXS_EVT_UPLOAD_OK:
                 onUploadOk();
                 break;
+            case DBXS_EVT_BOOKS_ON_SYNC:
+                onBooksUnchanged();
+                break;
             case DBXS_EVT_ERROR:
                 onError( intent.getStringExtra( DBXS_EXTRA_MSG_KEY ) );
                 break;
@@ -65,6 +68,10 @@ public class DboxBroadcastReceiver extends BroadcastReceiver{
 
 
     protected void onBooksChanged( String rev ){
+        // pass
+    }
+
+    protected void onBooksUnchanged(){
         // pass
     }
 

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context="com.example.toolbar.MainActivity">
+
+    <item
+        android:id="@+id/action_search"
+        android:icon="@android:drawable/ic_menu_search"
+        app:showAsAction="always|collapseActionView"
+        app:actionViewClass="android.support.v7.widget.SearchView"
+        android:title="Search"/>
+
+    <item
+        android:id="@+id/action_sync"
+        android:icon="@android:drawable/stat_notify_sync_noanim"
+        android:title="Sync"
+        app:showAsAction="always" />
+
+</menu>

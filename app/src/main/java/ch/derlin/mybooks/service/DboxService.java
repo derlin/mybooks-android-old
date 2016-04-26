@@ -158,7 +158,7 @@ public class DboxService extends BaseDboxService{
         boolean isAuth = super.startAuth( callingActivity );
         if( isAuth ){
             // already linked
-            openFile();
+            startFetchBooks();
         }
         return isAuth;
     }
@@ -167,11 +167,11 @@ public class DboxService extends BaseDboxService{
     @Override
     public void finishAuth(){
         super.finishAuth();
-        openFile();
+        startFetchBooks();
     }
 
 
-    private boolean openFile(){
+    public boolean startFetchBooks(){
 
         if( mGetFileThread == null ){
             mGetFileThread = new Thread( new RunnableGetFile() );
@@ -279,7 +279,11 @@ public class DboxService extends BaseDboxService{
                     mLatestRev = rev;
                     if( mBooks != null ){
                         notifyBooksChanged();
+                    }else{
+                        notifyBooksOnSync();
                     }
+                }else{
+                    notifyBooksOnSync();
                 }
 
             }catch( Exception e ){
@@ -316,6 +320,11 @@ public class DboxService extends BaseDboxService{
 
     protected void notifyUploadOk(){
         Intent i = getIntent( DBXS_EVT_UPLOAD_OK );
+        mBroadcastManager.sendBroadcast( i );
+    }
+
+    protected void notifyBooksOnSync(){
+        Intent i = getIntent( DBXS_EVT_BOOKS_ON_SYNC );
         mBroadcastManager.sendBroadcast( i );
     }
 
