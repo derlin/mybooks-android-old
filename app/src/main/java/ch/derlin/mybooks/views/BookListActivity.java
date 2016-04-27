@@ -221,17 +221,17 @@ public class BookListActivity extends AppCompatActivity{
             @Override
             public boolean onQueryTextSubmit( String query ){
                 // todo
-                Toast.makeText( BookListActivity.this, "searching for " + query, Toast.LENGTH_SHORT ).show();
-                if( !searchView.isIconified() ){
-                    searchView.setIconified( true );
-                }
-                searchMenuItem.collapseActionView();
+//                if( !searchView.isIconified() ){
+//                    searchView.setIconified( true );
+//                }
+//                searchMenuItem.collapseActionView();
                 return false;
             }
 
 
             @Override
             public boolean onQueryTextChange( String s ){
+                mAdapter.filter( s );
                 return false;
             }
         } );
@@ -255,24 +255,48 @@ public class BookListActivity extends AppCompatActivity{
 
     // ----------------------------------------------------
 
+
+    // ----------------------------------------------------
+
     public class BooksAdapter extends RecyclerView.Adapter<BooksAdapter.ViewHolder> implements SectionIndexer{
 
-        private final List<Book> mBooksList;
+        private List<Book> mBooksList;
+        private List<Book> mOriginalBooksList;
 
 
         public BooksAdapter( List<Book> items ){
             mBooksList = new ArrayList<>( items );
+            mOriginalBooksList = new ArrayList<>( items );
         }
 
 
         public BooksAdapter(){
             mBooksList = new ArrayList<>();
+            mOriginalBooksList = new ArrayList<>();
         }
 
 
         public void setBooksList( List<Book> books ){
-            mBooksList.clear();
-            mBooksList.addAll( books );
+            mOriginalBooksList = new ArrayList<>( books );
+            mBooksList = mOriginalBooksList;
+            notifyDataSetChanged();
+        }
+
+
+        public void filter( String search ){
+
+            List<Book> filtered;
+            if( search == null || search.isEmpty() ){
+                filtered = mOriginalBooksList;
+            }else{
+                search = search.toLowerCase();
+                filtered = new ArrayList<>();
+                for( Book book : mOriginalBooksList ){
+                    if( book.match( search ) ) filtered.add( book );
+                }//end for
+            }
+
+            mBooksList = filtered;
             notifyDataSetChanged();
         }
 

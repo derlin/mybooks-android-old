@@ -77,4 +77,12 @@ public class Book implements Parcelable{
             return new Book[ size ];
         }
     };
+
+
+    public boolean match( String search ){
+        return title.toLowerCase().contains( search ) || //
+                author.toLowerCase().contains( search ) || //
+                ( date != null && date.toLowerCase().contains( search ) ) || //
+                ( notes != null && notes.toLowerCase().contains( search ) );
+    }
 }
