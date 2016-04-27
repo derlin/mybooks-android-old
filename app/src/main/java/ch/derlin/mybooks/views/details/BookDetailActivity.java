@@ -7,9 +7,11 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import ch.derlin.mybooks.R;
+import ch.derlin.mybooks.service.DboxService;
 import ch.derlin.mybooks.views.BookListActivity;
 import ch.derlin.mybooks.views.edit.BookEditDetailActivity;
 
@@ -74,17 +76,23 @@ public class BookDetailActivity extends AppCompatActivity{
 
 
     @Override
+    public boolean onCreateOptionsMenu( Menu menu ){
+        getMenuInflater().inflate( R.menu.toolbar_menu_details, menu );
+        return true;
+    }
+
+
+    @Override
     public boolean onOptionsItemSelected( MenuItem item ){
         int id = item.getItemId();
-        if( id == android.R.id.home ){
-            // This ID represents the Home or Up button. In the case of this
-            // activity, the Up button is shown. For
-            // more details, see the Navigation pattern on Android Design:
-            //
-            // http://developer.android.com/design/patterns/navigation.html#up-vs-back
-            //
-            navigateUpTo( new Intent( this, BookListActivity.class ) );
-            return true;
+        switch( id ){
+            case android.R.id.home:
+                navigateUpTo( new Intent( this, BookListActivity.class ) );
+                return true;
+            case R.id.action_delete:
+                DboxService.getInstance().deleteBook( mBookTitle );
+                finish();
+                return true;
         }
         return super.onOptionsItemSelected( item );
     }

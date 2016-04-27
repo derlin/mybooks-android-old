@@ -2,7 +2,7 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    tools:context="com.example.toolbar.MainActivity">
+    tools:context=".views.BookListActivity">
 
     <item
         android:id="@+id/action_search"
@@ -15,6 +15,13 @@
         android:id="@+id/action_sync"
         android:icon="@android:drawable/stat_notify_sync_noanim"
         android:title="Sync"
+        app:showAsAction="always" />
+
+    <item
+        android:id="@+id/action_delete"
+        android:icon="@android:drawable/ic_delete"
+        android:title="Delete"
+        android:visible="false"
         app:showAsAction="always" />
 
 </menu>

@@ -85,15 +85,4 @@
         </GridLayout>
     </ScrollView>
 
-    <ImageButton
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/btn_delete"
-        android:background="@android:color/white"
-        android:layout_margin="15dp"
-        android:src="@android:drawable/ic_menu_delete"
-        android:layout_alignParentEnd="true"
-        android:layout_alignParentBottom="true"
-        />
-
 </RelativeLayout><!--<TextView--><!--android:id="@+id/book_detail"--><!--style="?android:attr/textAppearanceLarge"--><!--xmlns:android="http://schemas.android.com/apk/res/android"--><!--xmlns:tools="http://schemas.android.com/tools"--><!--android:layout_width="match_parent"--><!--android:layout_height="match_parent"--><!--android:padding="16dp"--><!--android:textIsSelectable="true"--><!--tools:context=".views.BookDetailFragment" />-->

@@ -67,20 +67,9 @@ public class BookDetailFragment extends Fragment{
             ( ( TextView ) rootView.findViewById( R.id.details_author ) ).setText( mBook.author );
             ( ( TextView ) rootView.findViewById( R.id.details_date ) ).setText( mBook.date );
             ( ( TextView ) rootView.findViewById( R.id.details_notes ) ).setText( mBook.notes );
-            rootView.findViewById( R.id.btn_delete ).setOnClickListener( new View.OnClickListener(){
-                @Override
-                public void onClick( View v ){
-                    delete();
-                }
-            } );
         }
 
         return rootView;
     }
 
-
-    private void delete(){
-        DboxService.getInstance().deleteBook( mBook.title );
-        getActivity().finish();
-    }
 }

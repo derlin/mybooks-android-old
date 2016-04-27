@@ -55,6 +55,7 @@ public class BookListActivity extends AppCompatActivity{
 
     private boolean mFirstLoad = true;
     private FloatingActionButton mFab;
+    private MenuItem mActionDelete;
 
     // ----------------------------------------------------
 
@@ -128,7 +129,7 @@ public class BookListActivity extends AppCompatActivity{
             @Override
             public void onClick( View view ){
                 if( mTwoPane ){
-                    // TODO
+                    mActionDelete.setVisible( false );
                 }else{
                     Intent intent = new Intent( BookListActivity.this, BookEditDetailActivity.class );
                     startActivityForResult( intent, ADD_REQUEST_CODE );
@@ -213,8 +214,8 @@ public class BookListActivity extends AppCompatActivity{
     // ----------------------------------------------------
     @Override
     public boolean onCreateOptionsMenu( Menu menu ){
-        getMenuInflater().inflate( R.menu.toolbar_menu, menu );
-
+        getMenuInflater().inflate( R.menu.toolbar_menu_list, menu );
+        mActionDelete = menu.findItem( R.id.action_delete );
         final MenuItem searchMenuItem = menu.findItem( R.id.action_search );
         final SearchView searchView = ( SearchView ) searchMenuItem.getActionView();
         searchView.setOnQueryTextListener( new SearchView.OnQueryTextListener(){
@@ -319,6 +320,7 @@ public class BookListActivity extends AppCompatActivity{
                 @Override
                 public void onClick( View v ){
                     if( mTwoPane ){
+                        mActionDelete.setVisible( true );
                         Bundle arguments = new Bundle();
                         arguments.putString( BookListActivity.ARG_BOOK_TITLE, holder.mBook.title );
                         BookDetailFragment fragment = new BookDetailFragment();
