@@ -19,7 +19,7 @@
     -->
 
     <RelativeLayout
-        android:layout_width="@dimen/item_width"
+        android:layout_width="600dp"
         android:layout_height="match_parent">
 
 

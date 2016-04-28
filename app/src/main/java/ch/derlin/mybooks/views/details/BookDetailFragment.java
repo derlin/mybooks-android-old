@@ -40,16 +40,14 @@ public class BookDetailFragment extends Fragment{
         super.onCreate( savedInstanceState );
 
         Activity activity = this.getActivity();
-
-        if( activity.getIntent().hasExtra( BookListActivity.ARG_BOOK_TITLE ) ){
-            // Load the dummy content specified by the fragment
-            // arguments. In a real-world scenario, use a Loader
-            // to load content from a content provider.
-            String title = activity.getIntent().getStringExtra( BookListActivity.ARG_BOOK_TITLE );
+        String title = getArguments() != null ? //
+                getArguments().getString( BookListActivity.ARG_BOOK_TITLE ) : null;
+        if( title != null ){
             mBook = DboxService.getInstance().getBook( title );
 
             CollapsingToolbarLayout appBarLayout = ( CollapsingToolbarLayout ) activity.findViewById( R.id
                     .toolbar_layout );
+
             if( appBarLayout != null ){
                 appBarLayout.setTitle( title );
             }
