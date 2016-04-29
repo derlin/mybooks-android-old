@@ -2,16 +2,14 @@ package ch.derlin.mybooks.views.edit;
 
 import android.app.Activity;
 import android.os.Bundle;
-import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.view.Menu;
 import android.view.MenuItem;
-import android.widget.Toast;
+import android.view.View;
 import ch.derlin.mybooks.R;
-import ch.derlin.mybooks.service.DboxBroadcastReceiver;
 import ch.derlin.mybooks.views.BookListActivity;
-import ch.derlin.mybooks.views.IFab;
 
 /**
  * An activity representing a single Book detail screen. This
@@ -19,43 +17,18 @@ import ch.derlin.mybooks.views.IFab;
  * item details are presented side-by-side with a list of items
  * in a {@link BookListActivity}.
  */
-public class BookEditDetailActivity extends AppCompatActivity implements IFab{
+public class BookEditDetailActivity extends AppCompatActivity implements BookEditDetailFragment.EditDetailHolder{
 
-    private FloatingActionButton mFab;
-    private BookEditDetailActivity mActivity;
-    // ----------------------------------------------------
-
-    private DboxBroadcastReceiver mReceiver = new DboxBroadcastReceiver(){
-
-        @Override
-        protected void onError( String msg ){
-            Toast.makeText( mActivity, msg, Toast.LENGTH_LONG ).show();
-            mFab.setEnabled( true );
-        }
-
-
-        @Override
-        protected void onUploadOk(){
-            Toast.makeText( BookEditDetailActivity.this, "changes saved.", Toast.LENGTH_LONG ).show();
-            mActivity.setResult( Activity.RESULT_OK );
-            mActivity.finish();
-        }
-    };
-
-    // ----------------------------------------------------
+    private View.OnClickListener mListener;
 
 
     @Override
     protected void onCreate( Bundle savedInstanceState ){
         super.onCreate( savedInstanceState );
-        mActivity = this;
 
         setContentView( R.layout.activity_book_detail );
         Toolbar toolbar = ( Toolbar ) findViewById( R.id.detail_toolbar );
         setSupportActionBar( toolbar );
-
-        mFab = ( FloatingActionButton ) findViewById( R.id.fab );
-        mFab.setImageDrawable( getResources().getDrawable( android.R.drawable.ic_menu_save, getTheme() ) );
 
         // Show the Up button in the action bar.
         ActionBar actionBar = getSupportActionBar();
@@ -87,39 +60,40 @@ public class BookEditDetailActivity extends AppCompatActivity implements IFab{
 
 
     @Override
-    public FloatingActionButton getIFab(){
-        return mFab;
+    public boolean onCreateOptionsMenu( Menu menu ){
+        getMenuInflater().inflate( R.menu.toolbar_menu_edit, menu );
+        return true;
     }
 
 
     @Override
     public boolean onOptionsItemSelected( MenuItem item ){
         int id = item.getItemId();
-        if( id == android.R.id.home ){
-            // This ID represents the Home or Up button. In the case of this
-            // activity, the Up button is shown. For
-            // more details, see the Navigation pattern on Android Design:
-            //
-            // http://developer.android.com/design/patterns/navigation.html#up-vs-back
-            //
-            setResult( Activity.RESULT_CANCELED );
-            finish();
-            return true;
+        switch( id ){
+            case R.id.action_save:
+                if( mListener != null ){
+                    mListener.onClick( null );
+                }
+                return true;
+
+            case android.R.id.home:
+                setResult( Activity.RESULT_CANCELED );
+                finish();
+                return true;
         }
         return super.onOptionsItemSelected( item );
     }
 
 
     @Override
-    protected void onResume(){
-        super.onResume();
-        mReceiver.registerSelf( this );
+    public void attachSaveListener( View.OnClickListener listener ){
+        mListener = listener;
     }
 
 
     @Override
-    protected void onPause(){
-        mReceiver.unregisterSelf( this );
-        super.onPause();
+    public void done( boolean actionDone ){
+        setResult( Activity.RESULT_OK );
+        finish();
     }
 }

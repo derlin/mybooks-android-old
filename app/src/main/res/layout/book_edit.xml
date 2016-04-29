@@ -1,0 +1,71 @@
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_height="match_parent"
+    android:layout_width="match_parent">
+
+    <GridLayout
+        android:columnCount="2"
+        android:layout_height="wrap_content"
+        android:layout_marginRight="4dp"
+        android:layout_marginTop="20sp"
+        android:layout_width="match_parent"
+        android:orientation="horizontal"
+        android:padding="10dp"
+        android:useDefaultMargins="false">
+
+        <!--title-->
+        <TextView
+            style="@style/details_label"
+            android:text="Title" />
+
+        <EditText
+            style="@style/details_value_edit"
+            android:id="@+id/details_title" />
+
+        <!--author-->
+        <TextView
+            style="@style/details_label"
+            android:text="Author" />
+
+        <EditText
+            style="@style/details_value_edit"
+            android:id="@+id/details_author"
+            android:text="sdlfkjsj" />
+
+        <!--date-->
+        <TextView
+            style="@style/details_label"
+            android:text="Read on" />
+
+        <EditText
+            style="@style/details_value_edit"
+            android:id="@+id/details_date"
+            android:inputType="text|textEmailAddress"
+            android:text="sdlfkjsj" />
+
+
+        <!--notes header-->
+        <TextView
+            style="@style/header"
+            android:layout_columnSpan="2"
+            android:layout_marginTop="30sp"
+            android:text="Notes" />
+
+        <View
+            style="@style/Divider"
+            android:layout_columnSpan="2"
+            android:layout_marginBottom="10dp" />
+
+
+        <!--notes field-->
+        <EditText
+            style="@style/details_font"
+            android:id="@+id/details_notes"
+            android:inputType="text|textMultiLine"
+            android:layout_columnSpan="2"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:layout_width="match_parent"
+            android:padding="5dp" />
+
+    </GridLayout>
+</ScrollView>
