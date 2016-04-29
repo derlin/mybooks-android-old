@@ -21,7 +21,7 @@ import ch.derlin.mybooks.service.DboxBroadcastReceiver;
 import ch.derlin.mybooks.service.DboxService;
 import ch.derlin.mybooks.views.details.DetailActivity;
 import ch.derlin.mybooks.views.details.DetailFragment;
-import ch.derlin.mybooks.views.edit.EditlActivity;
+import ch.derlin.mybooks.views.edit.EditActivity;
 import xyz.danoz.recyclerviewfastscroller.sectionindicator.SectionIndicator;
 import xyz.danoz.recyclerviewfastscroller.vertical.VerticalRecyclerViewFastScroller;
 
@@ -131,7 +131,7 @@ public class MainActivity extends AppCompatActivity{
                 if( mTwoPane ){
                     mActionDelete.setVisible( false );
                 }else{
-                    Intent intent = new Intent( MainActivity.this, EditlActivity.class );
+                    Intent intent = new Intent( MainActivity.this, EditActivity.class );
                     startActivityForResult( intent, ADD_REQUEST_CODE );
                 }
             }

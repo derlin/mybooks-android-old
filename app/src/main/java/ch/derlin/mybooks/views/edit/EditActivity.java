@@ -17,7 +17,7 @@ import ch.derlin.mybooks.views.MainActivity;
  * item details are presented side-by-side with a list of items
  * in a {@link MainActivity}.
  */
-public class EditlActivity extends AppCompatActivity implements EditFragment.EditDetailHolder{
+public class EditActivity extends AppCompatActivity implements EditFragment.EditDetailHolder{
 
     private View.OnClickListener mListener;
 
@@ -26,7 +26,7 @@ public class EditlActivity extends AppCompatActivity implements EditFragment.Edi
     protected void onCreate( Bundle savedInstanceState ){
         super.onCreate( savedInstanceState );
 
-        setContentView( R.layout.activity_detail );
+        setContentView( R.layout.activity_edit );
         Toolbar toolbar = ( Toolbar ) findViewById( R.id.detail_toolbar );
         setSupportActionBar( toolbar );
 
@@ -54,7 +54,7 @@ public class EditlActivity extends AppCompatActivity implements EditFragment.Edi
             arguments.putString( MainActivity.ARG_BOOK_TITLE, bookTitle );
             EditFragment fragment = new EditFragment();
             fragment.setArguments( arguments );
-            getSupportFragmentManager().beginTransaction().add( R.id.book_detail_container, fragment ).commit();
+            getSupportFragmentManager().beginTransaction().add( R.id.book_edit_container, fragment ).commit();
         }
     }
 

@@ -13,7 +13,7 @@ import android.view.View;
 import ch.derlin.mybooks.R;
 import ch.derlin.mybooks.service.DboxService;
 import ch.derlin.mybooks.views.MainActivity;
-import ch.derlin.mybooks.views.edit.EditlActivity;
+import ch.derlin.mybooks.views.edit.EditActivity;
 
 /**
  * An activity representing a single Book detail screen. This
@@ -39,7 +39,7 @@ public class DetailActivity extends AppCompatActivity{
             @Override
             public void onClick( View view ){
                 Context context = DetailActivity.this;
-                Intent intent = new Intent( context, EditlActivity.class );
+                Intent intent = new Intent( context, EditActivity.class );
                 intent.putExtra( MainActivity.ARG_BOOK_TITLE, mBookTitle );
                 context.startActivity( intent );
                 finish();
