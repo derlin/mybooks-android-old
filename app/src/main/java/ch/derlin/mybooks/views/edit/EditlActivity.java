@@ -1,9 +1,7 @@
-package ch.derlin.mybooks.views.details;
+package ch.derlin.mybooks.views.edit;
 
-import android.content.Context;
-import android.content.Intent;
+import android.app.Activity;
 import android.os.Bundle;
-import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -11,40 +9,26 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import ch.derlin.mybooks.R;
-import ch.derlin.mybooks.service.DboxService;
-import ch.derlin.mybooks.views.BookListActivity;
-import ch.derlin.mybooks.views.edit.BookEditDetailActivity;
+import ch.derlin.mybooks.views.MainActivity;
 
 /**
  * An activity representing a single Book detail screen. This
  * activity is only used narrow width devices. On tablet-size devices,
  * item details are presented side-by-side with a list of items
- * in a {@link BookListActivity}.
+ * in a {@link MainActivity}.
  */
-public class BookDetailActivity extends AppCompatActivity{
+public class EditlActivity extends AppCompatActivity implements EditFragment.EditDetailHolder{
 
-    private String mBookTitle;
+    private View.OnClickListener mListener;
 
 
     @Override
     protected void onCreate( Bundle savedInstanceState ){
         super.onCreate( savedInstanceState );
-        setContentView( R.layout.activity_book_detail );
+
+        setContentView( R.layout.activity_detail );
         Toolbar toolbar = ( Toolbar ) findViewById( R.id.detail_toolbar );
         setSupportActionBar( toolbar );
-
-        FloatingActionButton fab = ( FloatingActionButton ) findViewById( R.id.fab );
-        fab.setImageDrawable( getResources().getDrawable( android.R.drawable.ic_menu_edit, getTheme() ) );
-        fab.setOnClickListener( new View.OnClickListener(){
-            @Override
-            public void onClick( View view ){
-                Context context = BookDetailActivity.this;
-                Intent intent = new Intent( context, BookEditDetailActivity.class );
-                intent.putExtra( BookListActivity.ARG_BOOK_TITLE, mBookTitle );
-                context.startActivity( intent );
-                finish();
-            }
-        } );
 
         // Show the Up button in the action bar.
         ActionBar actionBar = getSupportActionBar();
@@ -64,11 +48,11 @@ public class BookDetailActivity extends AppCompatActivity{
         if( savedInstanceState == null ){
             // Create the detail fragment and add it to the activity
             // using a fragment transaction.
-            mBookTitle = getIntent().getStringExtra( BookListActivity.ARG_BOOK_TITLE );
             Bundle arguments = new Bundle();
-
-            arguments.putString( BookListActivity.ARG_BOOK_TITLE, mBookTitle );
-            BookDetailFragment fragment = new BookDetailFragment();
+            String bookTitle = getIntent().getStringExtra( MainActivity.ARG_BOOK_TITLE );
+            setTitle( bookTitle == null ? "New Book" : bookTitle );
+            arguments.putString( MainActivity.ARG_BOOK_TITLE, bookTitle );
+            EditFragment fragment = new EditFragment();
             fragment.setArguments( arguments );
             getSupportFragmentManager().beginTransaction().add( R.id.book_detail_container, fragment ).commit();
         }
@@ -77,7 +61,7 @@ public class BookDetailActivity extends AppCompatActivity{
 
     @Override
     public boolean onCreateOptionsMenu( Menu menu ){
-        getMenuInflater().inflate( R.menu.toolbar_menu_details, menu );
+        getMenuInflater().inflate( R.menu.toolbar_menu_edit, menu );
         return true;
     }
 
@@ -86,14 +70,30 @@ public class BookDetailActivity extends AppCompatActivity{
     public boolean onOptionsItemSelected( MenuItem item ){
         int id = item.getItemId();
         switch( id ){
-            case android.R.id.home:
-                navigateUpTo( new Intent( this, BookListActivity.class ) );
+            case R.id.action_save:
+                if( mListener != null ){
+                    mListener.onClick( null );
+                }
                 return true;
-            case R.id.action_delete:
-                DboxService.getInstance().deleteBook( mBookTitle );
+
+            case android.R.id.home:
+                setResult( Activity.RESULT_CANCELED );
                 finish();
                 return true;
         }
         return super.onOptionsItemSelected( item );
+    }
+
+
+    @Override
+    public void attachSaveListener( View.OnClickListener listener ){
+        mListener = listener;
+    }
+
+
+    @Override
+    public void done( boolean actionDone ){
+        setResult( Activity.RESULT_OK );
+        finish();
     }
 }

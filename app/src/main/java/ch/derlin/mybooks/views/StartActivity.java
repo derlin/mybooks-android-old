@@ -108,7 +108,7 @@ public class StartActivity extends AppCompatActivity{
 
 
     private void startApp(){
-        Intent intent = new Intent( this, BookListActivity.class );
+        Intent intent = new Intent( this, MainActivity.class );
         intent.setFlags( Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_TASK_ON_HOME );
         startActivity( intent );
         this.finish();

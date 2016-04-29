@@ -19,9 +19,9 @@ import ch.derlin.mybooks.R;
 import ch.derlin.mybooks.books.Book;
 import ch.derlin.mybooks.service.DboxBroadcastReceiver;
 import ch.derlin.mybooks.service.DboxService;
-import ch.derlin.mybooks.views.details.BookDetailActivity;
-import ch.derlin.mybooks.views.details.BookDetailFragment;
-import ch.derlin.mybooks.views.edit.BookEditDetailActivity;
+import ch.derlin.mybooks.views.details.DetailActivity;
+import ch.derlin.mybooks.views.details.DetailFragment;
+import ch.derlin.mybooks.views.edit.EditlActivity;
 import xyz.danoz.recyclerviewfastscroller.sectionindicator.SectionIndicator;
 import xyz.danoz.recyclerviewfastscroller.vertical.VerticalRecyclerViewFastScroller;
 
@@ -32,11 +32,11 @@ import java.util.List;
  * An activity representing a list of Books. This activity
  * has different presentations for handset and tablet-size devices. On
  * handsets, the activity presents a list of items, which when touched,
- * lead to a {@link BookDetailActivity} representing
+ * lead to a {@link DetailActivity} representing
  * item details. On tablets, the activity presents the list of items and
  * item details side-by-side using two vertical panes.
  */
-public class BookListActivity extends AppCompatActivity{
+public class MainActivity extends AppCompatActivity{
 
     public static final String ARG_BOOK_TITLE = "book_title";
 
@@ -71,7 +71,7 @@ public class BookListActivity extends AppCompatActivity{
 
         @Override
         protected void onError( String msg ){
-            Toast.makeText( BookListActivity.this, msg, Toast.LENGTH_LONG ).show();
+            Toast.makeText( MainActivity.this, msg, Toast.LENGTH_LONG ).show();
         }
 
 
@@ -104,7 +104,7 @@ public class BookListActivity extends AppCompatActivity{
     @Override
     protected void onCreate( Bundle savedInstanceState ){
         super.onCreate( savedInstanceState );
-        setContentView( R.layout.activity_book_list );
+        setContentView( R.layout.activity_main );
 
         // setup recyclerview (listview)
         RecyclerView recyclerView = ( RecyclerView ) findViewById( R.id.book_list );
@@ -131,7 +131,7 @@ public class BookListActivity extends AppCompatActivity{
                 if( mTwoPane ){
                     mActionDelete.setVisible( false );
                 }else{
-                    Intent intent = new Intent( BookListActivity.this, BookEditDetailActivity.class );
+                    Intent intent = new Intent( MainActivity.this, EditlActivity.class );
                     startActivityForResult( intent, ADD_REQUEST_CODE );
                 }
             }
@@ -304,7 +304,7 @@ public class BookListActivity extends AppCompatActivity{
 
         @Override
         public ViewHolder onCreateViewHolder( ViewGroup parent, int viewType ){
-            View view = LayoutInflater.from( parent.getContext() ).inflate( R.layout.book_list_content, parent, false );
+            View view = LayoutInflater.from( parent.getContext() ).inflate( R.layout.activity_main_list_content, parent, false );
             return new ViewHolder( view );
         }
 
@@ -322,17 +322,17 @@ public class BookListActivity extends AppCompatActivity{
                     if( mTwoPane ){
                         mActionDelete.setVisible( true );
                         Bundle arguments = new Bundle();
-                        arguments.putString( BookListActivity.ARG_BOOK_TITLE, holder.mBook.title );
-                        BookDetailFragment fragment = new BookDetailFragment();
+                        arguments.putString( MainActivity.ARG_BOOK_TITLE, holder.mBook.title );
+                        DetailFragment fragment = new DetailFragment();
                         fragment.setArguments( arguments );
                         getSupportFragmentManager().beginTransaction().replace( R.id.book_detail_container, fragment
                         ).commit();
                     }else{
                         // todo: don't destroy current activity
                         Context context = v.getContext();
-                        Intent intent = new Intent( context, BookDetailActivity.class );
+                        Intent intent = new Intent( context, DetailActivity.class );
                         intent.setFlags( Intent.FLAG_ACTIVITY_REORDER_TO_FRONT );
-                        intent.putExtra( BookListActivity.ARG_BOOK_TITLE, holder.mBook.title );
+                        intent.putExtra( MainActivity.ARG_BOOK_TITLE, holder.mBook.title );
 
                         context.startActivity( intent );
                     }

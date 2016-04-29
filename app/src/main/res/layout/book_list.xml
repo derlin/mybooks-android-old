@@ -17,8 +17,8 @@
         android:layout_marginLeft="16dp"
         android:layout_marginRight="16dp"
         app:layoutManager="LinearLayoutManager"
-        tools:context=".views.BookListActivity"
-        tools:listitem="@layout/book_list_content" />
+        tools:context=".views.MainActivity"
+        tools:listitem="@layout/activity_main_list_content" />
 
     <xyz.danoz.recyclerviewfastscroller.vertical.VerticalRecyclerViewFastScroller
         android:id="@+id/fast_scroller"

@@ -13,16 +13,16 @@ import ch.derlin.mybooks.R;
 import ch.derlin.mybooks.books.Book;
 import ch.derlin.mybooks.service.DboxBroadcastReceiver;
 import ch.derlin.mybooks.service.DboxService;
-import ch.derlin.mybooks.views.BookListActivity;
-import ch.derlin.mybooks.views.details.BookDetailActivity;
+import ch.derlin.mybooks.views.MainActivity;
+import ch.derlin.mybooks.views.details.DetailActivity;
 
 /**
  * A fragment representing a single Book detail screen.
- * This fragment is either contained in a {@link BookListActivity}
- * in two-pane mode (on tablets) or a {@link BookDetailActivity}
+ * This fragment is either contained in a {@link MainActivity}
+ * in two-pane mode (on tablets) or a {@link DetailActivity}
  * on handsets.
  */
-public class BookEditDetailFragment extends Fragment implements View.OnClickListener{
+public class EditFragment extends Fragment implements View.OnClickListener{
 
     public interface EditDetailHolder{
         void attachSaveListener( View.OnClickListener listener );
@@ -63,7 +63,7 @@ public class BookEditDetailFragment extends Fragment implements View.OnClickList
      * Mandatory empty constructor for the fragment manager to instantiate the
      * fragment (e.g. upon screen orientation changes).
      */
-    public BookEditDetailFragment(){
+    public EditFragment(){
     }
 
 
@@ -77,8 +77,8 @@ public class BookEditDetailFragment extends Fragment implements View.OnClickList
         mService = DboxService.getInstance();
 
         mBook = new Book();
-        if( activity.getIntent().hasExtra( BookListActivity.ARG_BOOK_TITLE ) ){
-            mOldTitle = activity.getIntent().getStringExtra( BookListActivity.ARG_BOOK_TITLE );
+        if( activity.getIntent().hasExtra( MainActivity.ARG_BOOK_TITLE ) ){
+            mOldTitle = activity.getIntent().getStringExtra( MainActivity.ARG_BOOK_TITLE );
             mBook = mService.getBook( mOldTitle );
         }
 
@@ -146,7 +146,7 @@ public class BookEditDetailFragment extends Fragment implements View.OnClickList
 
     @Override
     public View onCreateView( LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState ){
-        View rootView = inflater.inflate( R.layout.book_edit, container, false );
+        View rootView = inflater.inflate( R.layout.fragment_edit, container, false );
 
         if( mBook != null ){
             mEditTitle = ( EditText ) rootView.findViewById( R.id.details_title );

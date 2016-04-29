@@ -11,29 +11,29 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity
-            android:name=".views.BookListActivity"
+            android:name=".views.MainActivity"
             android:label="@string/app_name"
             android:launchMode="singleTop"
             android:theme="@style/AppTheme.NoActionBar"
             android:windowSoftInputMode="adjustResize" />
         <activity
-            android:name=".views.details.BookDetailActivity"
+            android:name=".views.details.DetailActivity"
             android:label="@string/title_book_detail"
-            android:parentActivityName=".views.BookListActivity"
+            android:parentActivityName=".views.MainActivity"
             android:theme="@style/AppTheme.NoActionBar">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value=".views.BookListActivity" />
+                android:value=".views.MainActivity" />
         </activity>
         <activity
-            android:name=".views.edit.BookEditDetailActivity"
+            android:name=".views.edit.EditlActivity"
             android:label="@string/title_book_detail"
-            android:parentActivityName=".views.BookListActivity"
+            android:parentActivityName=".views.MainActivity"
             android:theme="@style/AppTheme.NoActionBar"
             android:windowSoftInputMode="adjustPan">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value=".views.BookListActivity" />
+                android:value=".views.MainActivity" />
         </activity>
         <activity
             android:name=".views.StartActivity"

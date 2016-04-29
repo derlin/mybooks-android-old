@@ -10,7 +10,7 @@
     android:divider="?android:attr/dividerHorizontal"
     android:orientation="horizontal"
     android:showDividers="middle"
-    tools:context=".views.BookListActivity">
+    tools:context=".views.MainActivity">
 
     <!--
     This layout is a two-pane layout for the Books
@@ -33,8 +33,8 @@
             android:layout_marginLeft="16dp"
             android:layout_marginRight="16dp"
             app:layoutManager="LinearLayoutManager"
-            tools:context=".views.BookListActivity"
-            tools:listitem="@layout/book_list_content" />
+            tools:context=".views.MainActivity"
+            tools:listitem="@layout/activity_main_list_content" />
 
         <xyz.danoz.recyclerviewfastscroller.vertical.VerticalRecyclerViewFastScroller
             android:id="@+id/fast_scroller"

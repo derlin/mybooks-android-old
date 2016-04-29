@@ -11,15 +11,15 @@ import android.widget.TextView;
 import ch.derlin.mybooks.R;
 import ch.derlin.mybooks.books.Book;
 import ch.derlin.mybooks.service.DboxService;
-import ch.derlin.mybooks.views.BookListActivity;
+import ch.derlin.mybooks.views.MainActivity;
 
 /**
  * A fragment representing a single Book detail screen.
- * This fragment is either contained in a {@link BookListActivity}
- * in two-pane mode (on tablets) or a {@link BookDetailActivity}
+ * This fragment is either contained in a {@link MainActivity}
+ * in two-pane mode (on tablets) or a {@link DetailActivity}
  * on handsets.
  */
-public class BookDetailFragment extends Fragment{
+public class DetailFragment extends Fragment{
 
     /**
      * The dummy content this fragment is presenting.
@@ -31,7 +31,7 @@ public class BookDetailFragment extends Fragment{
      * Mandatory empty constructor for the fragment manager to instantiate the
      * fragment (e.g. upon screen orientation changes).
      */
-    public BookDetailFragment(){
+    public DetailFragment(){
     }
 
 
@@ -41,7 +41,7 @@ public class BookDetailFragment extends Fragment{
 
         Activity activity = this.getActivity();
         String title = getArguments() != null ? //
-                getArguments().getString( BookListActivity.ARG_BOOK_TITLE ) : null;
+                getArguments().getString( MainActivity.ARG_BOOK_TITLE ) : null;
         if( title != null ){
             mBook = DboxService.getInstance().getBook( title );
 
@@ -57,7 +57,7 @@ public class BookDetailFragment extends Fragment{
 
     @Override
     public View onCreateView( LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState ){
-        View rootView = inflater.inflate( R.layout.book_detail, container, false );
+        View rootView = inflater.inflate( R.layout.fragment_detail, container, false );
 
         // Show the dummy content as text in a TextView.
         if( mBook != null ){
