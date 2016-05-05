@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
+import android.support.v4.app.Fragment;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -22,6 +23,7 @@ import ch.derlin.mybooks.service.DboxService;
 import ch.derlin.mybooks.views.details.DetailActivity;
 import ch.derlin.mybooks.views.details.DetailFragment;
 import ch.derlin.mybooks.views.edit.EditActivity;
+import ch.derlin.mybooks.views.edit.EditFragment;
 import xyz.danoz.recyclerviewfastscroller.sectionindicator.SectionIndicator;
 import xyz.danoz.recyclerviewfastscroller.vertical.VerticalRecyclerViewFastScroller;
 
@@ -36,7 +38,7 @@ import java.util.List;
  * item details. On tablets, the activity presents the list of items and
  * item details side-by-side using two vertical panes.
  */
-public class MainActivity extends AppCompatActivity{
+public class MainActivity extends AppCompatActivity implements EditFragment.EditFragmentHolder{
 
     public static final String ARG_BOOK_TITLE = "book_title";
 
@@ -47,15 +49,22 @@ public class MainActivity extends AppCompatActivity{
     private boolean mTwoPane;
     private BooksAdapter mAdapter;
 
-    private int ADD_REQUEST_CODE = 0;
-    private int EDIT_REQUEST_CODE = 1;
+    private static final int ADD_REQUEST_CODE = 0;
+    private static final int EDIT_REQUEST_CODE = 1;
 
     private DboxService mService;
     private String mRev;
 
     private boolean mFirstLoad = true;
     private FloatingActionButton mFab;
-    private MenuItem mActionDelete;
+    private MenuItem mActionDelete, mActionEdit, mActionSave;
+
+    private View.OnClickListener mSaveListener;
+    private Book mTwoPaneBook = null;
+
+    private enum State{NONE, DETAILS, EDIT}
+
+    private State currentState = State.NONE;
 
     // ----------------------------------------------------
 
@@ -93,6 +102,7 @@ public class MainActivity extends AppCompatActivity{
                 @Override
                 public void onClick( View v ){
                     mService.addBook( book );
+                    if(mTwoPane) showDetailsFragment( book );
                 }
             } ).show();
         }
@@ -126,15 +136,13 @@ public class MainActivity extends AppCompatActivity{
 
         mFab = ( FloatingActionButton ) findViewById( R.id.fab );
         mFab.setOnClickListener( new View.OnClickListener(){
+
             @Override
             public void onClick( View view ){
-                if( mTwoPane ){
-                    mActionDelete.setVisible( false );
-                }else{
-                    Intent intent = new Intent( MainActivity.this, EditActivity.class );
-                    startActivityForResult( intent, ADD_REQUEST_CODE );
-                }
+                Intent intent = new Intent( MainActivity.this, EditActivity.class );
+                startActivityForResult( intent, ADD_REQUEST_CODE );
             }
+
         } );
 
 
@@ -173,6 +181,8 @@ public class MainActivity extends AppCompatActivity{
             super.onActivityResult( requestCode, resultCode, data );
         }
     }
+
+    // ----------------------------------------------------
 
     // ----------------------------------------------------
 
@@ -216,16 +226,49 @@ public class MainActivity extends AppCompatActivity{
     public boolean onCreateOptionsMenu( Menu menu ){
         getMenuInflater().inflate( R.menu.toolbar_menu_list, menu );
         mActionDelete = menu.findItem( R.id.action_delete );
+        mActionSave = menu.findItem( R.id.action_save );
+        mActionEdit = menu.findItem( R.id.action_edit );
+
+        mActionDelete.setOnMenuItemClickListener( new MenuItem.OnMenuItemClickListener(){
+            @Override
+            public boolean onMenuItemClick( MenuItem item ){
+                DboxService.getInstance().deleteBook( mTwoPaneBook.title );
+                showNoFragment();
+                return true;
+            }
+        } );
+
+        mActionSave.setOnMenuItemClickListener( new MenuItem.OnMenuItemClickListener(){
+            @Override
+            public boolean onMenuItemClick( MenuItem item ){
+                if( mSaveListener != null ){
+                    mSaveListener.onClick( null );
+                    return true;
+                }
+                return false;
+            }
+        } );
+
+        mActionEdit.setOnMenuItemClickListener( new MenuItem.OnMenuItemClickListener(){
+            @Override
+            public boolean onMenuItemClick( MenuItem item ){
+                assert mTwoPaneBook != null;
+                showEditFragment( mTwoPaneBook );
+                return true;
+            }
+        } );
+
+
         final MenuItem searchMenuItem = menu.findItem( R.id.action_search );
         final SearchView searchView = ( SearchView ) searchMenuItem.getActionView();
         searchView.setOnQueryTextListener( new SearchView.OnQueryTextListener(){
             @Override
             public boolean onQueryTextSubmit( String query ){
                 // todo
-//                if( !searchView.isIconified() ){
-//                    searchView.setIconified( true );
-//                }
-//                searchMenuItem.collapseActionView();
+                //                if( !searchView.isIconified() ){
+                //                    searchView.setIconified( true );
+                //                }
+                //                searchMenuItem.collapseActionView();
                 return false;
             }
 
@@ -254,7 +297,96 @@ public class MainActivity extends AppCompatActivity{
         return super.onOptionsItemSelected( item );
     }
 
+
     // ----------------------------------------------------
+
+
+    private void bookSelected( final Book book ){
+
+        if( currentState == State.EDIT ){
+            showDetailsFragment( book );
+        }else{
+            showDetailsFragment( book );
+        }
+        //            new AlertDialog.Builder( this )  //
+        //                    .setMessage( "You have unsaved changes. Continue ?" )//
+        //                    .setIcon( android.R.drawable.ic_dialog_alert ) //
+        //                    .setPositiveButton( android.R.string.yes, new DialogInterface.OnClickListener(){
+        //
+        //                        public void onClick( DialogInterface dialog, int whichButton ){
+        //                            showDetailsFragment( book );
+        //                        }
+        //                    } ).setNegativeButton( android.R.string.no, null ).show();
+
+    }
+
+
+    private void showNoFragment(){
+        List<Fragment> fragments = getSupportFragmentManager().getFragments();
+        if( fragments != null ){
+            for( Fragment fragment : fragments ){
+                getSupportFragmentManager().beginTransaction().remove( fragment ).commit();
+            }
+        }
+    }
+
+
+    private void showDetailsFragment( Book book ){
+
+        mActionDelete.setVisible( true );
+        mActionEdit.setVisible( true );
+        mActionSave.setVisible( false );
+
+        Bundle arguments = new Bundle();
+        arguments.putString( MainActivity.ARG_BOOK_TITLE, book.title );
+        DetailFragment fragment = new DetailFragment();
+        fragment.setArguments( arguments );
+        getSupportFragmentManager().beginTransaction().replace( R.id.book_detail_container, fragment ).commit();
+
+        mTwoPaneBook = book;
+        currentState = State.DETAILS;
+    }
+
+
+    private void showEditFragment( Book book ){
+
+        mActionDelete.setVisible( false );
+        mActionEdit.setVisible( false );
+        mActionSave.setVisible( true );
+
+        Bundle arguments = new Bundle();
+        arguments.putString( MainActivity.ARG_BOOK_TITLE, book.title );
+        EditFragment fragment = new EditFragment();
+        fragment.setArguments( arguments );
+        getSupportFragmentManager().beginTransaction().replace( R.id.book_detail_container, fragment ).commit();
+
+        mTwoPaneBook = book;
+        currentState = State.EDIT;
+    }
+
+
+    @Override
+    public void attachSaveListener( final View.OnClickListener listener ){
+        mSaveListener = listener;
+
+    }
+
+
+    @Override
+    public void done( Book book, boolean actionDone ){
+        mSaveListener = null;
+        showDetailsFragment( book );
+    }
+
+
+    @Override
+    public void onBackPressed(){
+        if( currentState == State.EDIT ){
+            bookSelected( mTwoPaneBook );
+        }else{
+            super.onBackPressed();
+        }
+    }
 
 
     // ----------------------------------------------------
@@ -304,7 +436,8 @@ public class MainActivity extends AppCompatActivity{
 
         @Override
         public ViewHolder onCreateViewHolder( ViewGroup parent, int viewType ){
-            View view = LayoutInflater.from( parent.getContext() ).inflate( R.layout.activity_main_list_content, parent, false );
+            View view = LayoutInflater.from( parent.getContext() ).inflate( R.layout.activity_main_list_content,
+                    parent, false );
             return new ViewHolder( view );
         }
 
@@ -320,13 +453,7 @@ public class MainActivity extends AppCompatActivity{
                 @Override
                 public void onClick( View v ){
                     if( mTwoPane ){
-                        mActionDelete.setVisible( true );
-                        Bundle arguments = new Bundle();
-                        arguments.putString( MainActivity.ARG_BOOK_TITLE, holder.mBook.title );
-                        DetailFragment fragment = new DetailFragment();
-                        fragment.setArguments( arguments );
-                        getSupportFragmentManager().beginTransaction().replace( R.id.book_detail_container, fragment
-                        ).commit();
+                        bookSelected( holder.mBook );
                     }else{
                         // todo: don't destroy current activity
                         Context context = v.getContext();

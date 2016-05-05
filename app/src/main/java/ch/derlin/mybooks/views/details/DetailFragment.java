@@ -21,9 +21,6 @@ import ch.derlin.mybooks.views.MainActivity;
  */
 public class DetailFragment extends Fragment{
 
-    /**
-     * The dummy content this fragment is presenting.
-     */
     private Book mBook;
 
 

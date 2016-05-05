@@ -9,6 +9,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import ch.derlin.mybooks.R;
+import ch.derlin.mybooks.books.Book;
 import ch.derlin.mybooks.views.MainActivity;
 
 /**
@@ -17,7 +18,7 @@ import ch.derlin.mybooks.views.MainActivity;
  * item details are presented side-by-side with a list of items
  * in a {@link MainActivity}.
  */
-public class EditActivity extends AppCompatActivity implements EditFragment.EditDetailHolder{
+public class EditActivity extends AppCompatActivity implements EditFragment.EditFragmentHolder{
 
     private View.OnClickListener mListener;
 
@@ -92,7 +93,7 @@ public class EditActivity extends AppCompatActivity implements EditFragment.Edit
 
 
     @Override
-    public void done( boolean actionDone ){
+    public void done( Book book, boolean actionDone ){
         setResult( Activity.RESULT_OK );
         finish();
     }

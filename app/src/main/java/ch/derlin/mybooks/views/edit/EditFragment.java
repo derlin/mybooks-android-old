@@ -24,10 +24,10 @@ import ch.derlin.mybooks.views.details.DetailActivity;
  */
 public class EditFragment extends Fragment implements View.OnClickListener{
 
-    public interface EditDetailHolder{
+    public interface EditFragmentHolder{
         void attachSaveListener( View.OnClickListener listener );
 
-        void done( boolean actionDone );
+        void done( Book book, boolean actionDone );
     }
 
     // ----------------------------------------------------
@@ -43,7 +43,7 @@ public class EditFragment extends Fragment implements View.OnClickListener{
         @Override
         protected void onUploadOk(){
             Toast.makeText( getActivity(), "changes saved.", Toast.LENGTH_LONG ).show();
-            mHolder.done( true );
+            mHolder.done( mBook, true );
         }
     };
 
@@ -54,7 +54,7 @@ public class EditFragment extends Fragment implements View.OnClickListener{
     private EditText mEditTitle, mEditAuthor, mEditDate, mEditNotes;
     private DboxService mService;
 
-    private EditDetailHolder mHolder;
+    private EditFragmentHolder mHolder;
 
     // ----------------------------------------------------
 
@@ -77,10 +77,9 @@ public class EditFragment extends Fragment implements View.OnClickListener{
         mService = DboxService.getInstance();
 
         mBook = new Book();
-        if( activity.getIntent().hasExtra( MainActivity.ARG_BOOK_TITLE ) ){
-            mOldTitle = activity.getIntent().getStringExtra( MainActivity.ARG_BOOK_TITLE );
-            mBook = mService.getBook( mOldTitle );
-        }
+        mOldTitle = getArguments().getString( MainActivity.ARG_BOOK_TITLE );
+        if( mOldTitle != null ) mBook = mService.getBook( mOldTitle );
+
 
         CollapsingToolbarLayout appBarLayout = ( CollapsingToolbarLayout ) activity.findViewById( R.id.toolbar_layout );
 
@@ -88,8 +87,8 @@ public class EditFragment extends Fragment implements View.OnClickListener{
             appBarLayout.setTitle( mBook.title );
         }
 
-        if( activity instanceof EditDetailHolder ){
-            mHolder = ( EditDetailHolder ) activity;
+        if( activity instanceof EditFragmentHolder ){
+            mHolder = ( EditFragmentHolder ) activity;
             mHolder.attachSaveListener( this );
         }
 
