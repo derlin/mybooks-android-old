@@ -13,6 +13,16 @@ import ch.derlin.mybooks.R;
 import ch.derlin.mybooks.service.DboxBroadcastReceiver;
 import ch.derlin.mybooks.service.DboxService;
 
+/**
+ * This activity is the entry point of the application.
+ * It ensures that the app is linked to dropbox and that
+ * the dropbox service is instantiated before launching
+ * the actual main activity.
+ * <br />----------------------------------------------------<br/>
+ * Derlin - MyBooks Android, May, 2016
+ *
+ * @author Lucy Linder
+ */
 public class StartActivity extends AppCompatActivity{
 
 
@@ -20,6 +30,7 @@ public class StartActivity extends AppCompatActivity{
     private boolean mIsAuthenticating = false;
     // ----------------------------------------------------
 
+    // this allows us to detect when the service is up.
     private ServiceConnection mServiceConnection = new ServiceConnection(){
         @Override
         public void onServiceConnected( ComponentName name, IBinder service ){
@@ -34,6 +45,7 @@ public class StartActivity extends AppCompatActivity{
         }
     };
 
+    // this allows us to detect when the books have been loaded
     private DboxBroadcastReceiver mReceiver = new DboxBroadcastReceiver(){
         @Override
         protected void onBooksChanged( String rev ){
@@ -63,6 +75,7 @@ public class StartActivity extends AppCompatActivity{
     @Override
     protected void onStart(){
         super.onStart();
+        // start the dropbox service
         startService( new Intent( getApplicationContext(), DboxService.class ) );
         bindService( new Intent( getApplicationContext(), DboxService.class ),  //
                 mServiceConnection, Context.BIND_AUTO_CREATE );
@@ -86,6 +99,8 @@ public class StartActivity extends AppCompatActivity{
     @Override
     protected void onResume(){
         super.onResume();
+        // the dropbox linking happens in another
+        // activity.
         mReceiver.registerSelf( this );
         if( mDboxService != null && mIsAuthenticating ){
             mDboxService.finishAuth();
@@ -108,6 +123,7 @@ public class StartActivity extends AppCompatActivity{
 
 
     private void startApp(){
+        // service up and running, start the actual app
         Intent intent = new Intent( this, MainActivity.class );
         intent.setFlags( Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_TASK_ON_HOME );
         startActivity( intent );

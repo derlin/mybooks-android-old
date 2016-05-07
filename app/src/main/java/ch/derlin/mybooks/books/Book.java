@@ -4,10 +4,9 @@ import android.os.Parcel;
 import android.os.Parcelable;
 
 /**
- * Context:
+ * Derlin - MyBooks Android, May, 2016
  *
  * @author Lucy Linder
- *         Date 12.04.16.
  */
 public class Book implements Parcelable{
     public String title;
@@ -20,14 +19,9 @@ public class Book implements Parcelable{
     }
 
 
-    public Book( Parcel in ){
-        this.title = in.readString();
-        this.author = in.readString();
-        this.date = in.readString();
-        this.notes = in.readString();
-    }
-
-
+    /**
+     * {@see normalizeKey}
+     */
     public String getNormalizedKey(){
         return normalizeKey( title );
     }
@@ -35,6 +29,15 @@ public class Book implements Parcelable{
     // ----------------------------------------------------
 
 
+    /**
+     * returns a normalized version of the book title, i.e.:
+     * 1) to lower case
+     * 2) accented characters replaced by their non accented counterparts
+     * 3) replace not a-z or 0-9 characters by spaces
+     * 4) trim + replace multiple spaces by one
+     *
+     * @return the normalized title
+     */
     public static String normalizeKey( String key ){
         key = key.toLowerCase() //
                 .replace( "é", "e" )//
@@ -50,11 +53,19 @@ public class Book implements Parcelable{
     }
 
     // ----------------------------------------------------
-
+    // Parcelable interface
 
     @Override
     public int describeContents(){
         return 0;
+    }
+
+
+    public Book( Parcel in ){
+        this.title = in.readString();
+        this.author = in.readString();
+        this.date = in.readString();
+        this.notes = in.readString();
     }
 
 

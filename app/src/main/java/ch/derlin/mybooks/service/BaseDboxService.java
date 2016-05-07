@@ -12,10 +12,19 @@ import com.dropbox.client2.android.AndroidAuthSession;
 import com.dropbox.client2.session.AppKeyPair;
 
 /**
- * Context:
+ * A basic dropbox service using the V2 API.
+ * How to use:
+ * - change the APP_KEY and APP_SECRET
+ * - in your main activity, initialise the service by calling
+ * {@ref startAuth}. If it returns true, then the linking has
+ * already been done. If not, the method will launch the OAuth
+ * flow. In this case, you need to call {@ref finishAuth} in the
+ * activity onResume method. see {@link ch.derlin.mybooks.views.StartActivity}
+ * for an example.
+ * <br />----------------------------------------------------<br/>
+ * Derlin - MyBooks Android, May, 2016
  *
  * @author Lucy Linder
- *         Date 18.04.16.
  */
 public class BaseDboxService extends Service{
 
@@ -55,6 +64,16 @@ public class BaseDboxService extends Service{
     // ----------------------------------------------------
 
 
+    /**
+     * start the authentication process. If the user is already
+     * logged in, the method returns immediately. If not,
+     * a dropbox activity is launched and the caller will need
+     * to call {@ref finishAuth} in its onResume.
+     *
+     * @param callingActivity the calling activity
+     * @return true (immediate) if already authentified, won't
+     * return but will launch the OAuth process otherwise.
+     */
     public boolean startAuth( Context callingActivity ){
         // And later in some initialization function:
         AndroidAuthSession session = getSession( getApplicationContext() );
@@ -67,6 +86,12 @@ public class BaseDboxService extends Service{
         return true;
     }
 
+
+    /**
+     * finish the authentication process. Must be called in the
+     * onResume method of the caller. See {@link ch.derlin.mybooks.views.StartActivity}
+     * for an example.
+     */
     public void finishAuth(){
 
         if( mDBApi.getSession().authenticationSuccessful() ){
@@ -83,7 +108,7 @@ public class BaseDboxService extends Service{
         }
     }
 
-    
+
     // ----------------------------------------------------
 
 

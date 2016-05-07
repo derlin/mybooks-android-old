@@ -21,16 +21,22 @@ import java.util.*;
 import static ch.derlin.mybooks.service.DboxConstants.*;
 
 /**
- * Context:
+ * A specialized dropbox service using the CORE API V2 to store
+ * books in a json file in dropbox.
+ * It can be used as a singleton, but for this ensure that the
+ * service is started with startService and not bindService.
+ * <p/>
+ * To keep in sync with the service, use a {@link DboxBroadcastReceiver}
+ * <br />----------------------------------------------------<br/>
+ * Derlin - MyBooks Android, May, 2016
  *
  * @author Lucy Linder
- *         Date 18.04.16.
  */
 public class DboxService extends BaseDboxService{
 
     private static final String BOOKS_FILE_PATH = "/mybooks.json";
-    protected LocalBroadcastManager mBroadcastManager;
 
+    protected LocalBroadcastManager mBroadcastManager;
     private Gson mGson = new GsonBuilder().setPrettyPrinting().create();
     private Map<String, Book> mBooks;
     private String mLatestRev;
@@ -89,24 +95,38 @@ public class DboxService extends BaseDboxService{
     // ----------------------------------------------------
 
 
+    /**
+     * @return the book list, or null if not loaded yet.
+     */
     public List<Book> getBooks(){
         return mBooks != null ?  //
                 new ArrayList<>( mBooks.values() ) : null;
     }
 
 
+    /**
+     * @return the list of titles (normalized) or null if
+     * the books are not loaded.
+     */
     public List<String> getTitles(){
         return mBooks != null ?  //
                 new ArrayList<>( mBooks.keySet() ) : null;
     }
 
 
+    /**
+     * @param title the book title
+     * @return the book, or null if the title does not match any.
+     */
     public Book getBook( String title ){
         return mBooks != null ?  //
                 mBooks.get( Book.normalizeKey( title ) ) : null;
     }
 
 
+    /**
+     * @return the last revision of the dbx file
+     */
     public String getLatestRev(){
         return mLatestRev;
     }
@@ -114,6 +134,15 @@ public class DboxService extends BaseDboxService{
     // ----------------------------------------------------
 
 
+    /**
+     * save the modification of a books to dropbox.
+     * Note: the saving process is asynchronous: to know
+     * if it succeeded, use a {@link DboxBroadcastReceiver}.
+     *
+     * @param oldTitle original title
+     * @param book     new values
+     * @return false upon error (book not found)
+     */
     public synchronized boolean editBook( String oldTitle, Book book ){
         String oldKey = Book.normalizeKey( oldTitle );
         if( !mBooks.containsKey( oldKey ) ) return false;
@@ -129,6 +158,13 @@ public class DboxService extends BaseDboxService{
     }
 
 
+    /**
+     * add a book.
+     * Note: the saving process is asynchronous: to know
+     * if it succeeded, use a {@link DboxBroadcastReceiver}.
+     *
+     * @param book the new book
+     */
     public synchronized void addBook( Book book ){
         Map<String, Book> updated = new TreeMap<>( mBooks );
         updated.put( book.getNormalizedKey(), book );
@@ -136,6 +172,14 @@ public class DboxService extends BaseDboxService{
     }
 
 
+    /**
+     * delete a book.
+     * Note: the saving process is asynchronous: to know
+     * if it succeeded, use a {@link DboxBroadcastReceiver}.
+     *
+     * @param title the book title
+     * @return false upon error (book not found)
+     */
     public synchronized boolean deleteBook( String title ){
         String key = Book.normalizeKey( title );
         if( !mBooks.containsKey( key ) ) return false;
@@ -157,7 +201,7 @@ public class DboxService extends BaseDboxService{
     public boolean startAuth( Context callingActivity ){
         boolean isAuth = super.startAuth( callingActivity );
         if( isAuth ){
-            // already linked
+            // already linked, automatically load books
             startFetchBooks();
         }
         return isAuth;
@@ -182,18 +226,6 @@ public class DboxService extends BaseDboxService{
     }
 
 
-    //    private void closeFile(){
-    //        if( mGetFileThread != null ){
-    //            mGetFileThread.interrupt();
-    //            mGetFileThread = null;
-    //        }
-    //        if( mUpdateFileThread != null ){
-    //            mUpdateFileThread.interrupt();
-    //            mUpdateFileThread = null;
-    //        }
-    //    }
-
-
     public boolean startUpload( Map<String, Book> updated ){
         return startUpload( updated, null );
     }
@@ -210,7 +242,9 @@ public class DboxService extends BaseDboxService{
 
     // ----------------------------------------------------
 
-
+    /*
+     * A background job to upload the changes to Dropbox.
+     */
     private class RunnableUpdate implements Runnable{
 
         Map<String, Book> updatedBooks;
@@ -240,6 +274,7 @@ public class DboxService extends BaseDboxService{
                     mLatestRev = entry.rev;
                     setBooks( updatedBooks );
                     notifyBooksChanged();
+
                     if( delBook != null ){
                         notifyBookDeleted( delBook );
                     }else{
@@ -259,7 +294,9 @@ public class DboxService extends BaseDboxService{
         }
     }
 
-
+    /*
+     * A background job to get the file.
+     */
     private class RunnableGetFile implements Runnable{
 
         public void run(){
@@ -322,6 +359,7 @@ public class DboxService extends BaseDboxService{
         Intent i = getIntent( DBXS_EVT_UPLOAD_OK );
         mBroadcastManager.sendBroadcast( i );
     }
+
 
     protected void notifyBooksOnSync(){
         Intent i = getIntent( DBXS_EVT_BOOKS_ON_SYNC );

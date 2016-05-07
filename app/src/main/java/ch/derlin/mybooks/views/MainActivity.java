@@ -31,50 +31,58 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * An activity representing a list of Books. This activity
- * has different presentations for handset and tablet-size devices. On
- * handsets, the activity presents a list of items, which when touched,
- * lead to a {@link DetailActivity} representing
- * item details. On tablets, the activity presents the list of items and
- * item details side-by-side using two vertical panes.
+ * In "one-pane" mode, this activity:
+ * - displays a list of books (title-author)
+ * - displays a fab to add books, launching the {@link EditActivity}
+ * - launches the {@link DetailActivity}  on list item click
+ * <p>
+ * <p>
+ * In "two-pane" mode, {@ref mTwoPane}, it does pretty everything, except the add book.
+ * - the fab does not change (add books)
+ * - details and edit happen in a fragment on the left
+ * - the save, edit and delete buttons are added on the toolbar and shown/hidden depending
+ * on the current fragment
+ * - the switch between fragments as well as the book currently shown/edited are kept in the
+ * {@ref mCurrentState} and {@ref mTwoPaneBook} variables
+ * <p>
+ *  <br />----------------------------------------------------<br/>
+ *  Derlin - MyBooks Android, May, 2016
+ * @author Lucy Linder
  */
 public class MainActivity extends AppCompatActivity implements EditFragment.EditFragmentHolder{
 
     public static final String ARG_BOOK_TITLE = "book_title";
-
-    /**
-     * Whether or not the activity is in two-pane mode, i.e. running on a tablet
-     * device.
-     */
-    private boolean mTwoPane;
-    private BooksAdapter mAdapter;
-
     private static final int ADD_REQUEST_CODE = 0;
     private static final int EDIT_REQUEST_CODE = 1;
 
+    private boolean mTwoPane;   // is the screen wide enough
+    private BooksAdapter mAdapter; // the book list adapter
+
     private DboxService mService;
-    private String mRev;
+    private String mRev; // the current dbx file revision, to avoid refreshing the list when no changes
 
-    private boolean mFirstLoad = true;
-    private FloatingActionButton mFab;
-    private MenuItem mActionDelete, mActionEdit, mActionSave;
+    private FloatingActionButton mFab; // the fab, which is moved with the snackbar
 
-    private View.OnClickListener mSaveListener;
-    private Book mTwoPaneBook = null;
+    // -------- used only in two panes mode:
 
-    private enum State{NONE, DETAILS, EDIT}
+    private enum State{
+        NONE, DETAILS, EDIT // what type of fragment is on the right pane
+    }
 
-    private State currentState = State.NONE;
+    private State mCurrentState = State.NONE; // current fragment type
+    private MenuItem mActionDelete, mActionEdit, mActionSave; // the toolbar buttons
+    private View.OnClickListener mSaveListener; // the save listener from the EditFragment
+    private Book mTwoPaneBook = null; // the book currently shown/edited, if any
+
 
     // ----------------------------------------------------
 
     private DboxBroadcastReceiver mReceiver = new DboxBroadcastReceiver(){
         @Override
         protected void onBooksChanged( String rev ){
-            mRev = rev;
-            if( !mFirstLoad ) Snackbar.make( mFab, "External changes. Updating.", Snackbar.LENGTH_LONG ).show();
+            if( mRev != null ) Snackbar.make( mFab, "External changes. Updating.", Snackbar.LENGTH_LONG ).show();
             mAdapter.setBooksList( mService.getBooks() );
-            mFirstLoad = true;
+            mRev = rev;
         }
 
 
@@ -102,7 +110,7 @@ public class MainActivity extends AppCompatActivity implements EditFragment.Edit
                 @Override
                 public void onClick( View v ){
                     mService.addBook( book );
-                    if(mTwoPane) showDetailsFragment( book );
+                    if( mTwoPane ) showDetailsFragment( book );
                 }
             } ).show();
         }
@@ -116,43 +124,47 @@ public class MainActivity extends AppCompatActivity implements EditFragment.Edit
         super.onCreate( savedInstanceState );
         setContentView( R.layout.activity_main );
 
-        // setup recyclerview (listview)
-        RecyclerView recyclerView = ( RecyclerView ) findViewById( R.id.book_list );
 
+        // check the pane mode
+        if( findViewById( R.id.book_detail_container ) != null ){
+            mTwoPane = true;
+        }
+
+        // the StartActivity ensures that the service is running --> should not be null
         mService = DboxService.getInstance();
 
         if( mService != null && mService.getBooks() != null ){
+            // if the books are already loaded
             mAdapter = new BooksAdapter( mService.getBooks() );
             mRev = mService.getLatestRev();
+
         }else{
+            // if not loaded, the broadcast receiver's onChange method will be called soon
             mAdapter = new BooksAdapter();
         }
 
+        // setup recyclerview (listview)
+        RecyclerView recyclerView = ( RecyclerView ) findViewById( R.id.book_list );
         setRecyclerViewLayoutManager( recyclerView, mAdapter );
 
+        // display the toolbar
         Toolbar toolbar = ( Toolbar ) findViewById( R.id.toolbar );
         setSupportActionBar( toolbar );
         toolbar.setTitle( getTitle() );
 
+        // floating button management
         mFab = ( FloatingActionButton ) findViewById( R.id.fab );
         mFab.setOnClickListener( new View.OnClickListener(){
 
             @Override
             public void onClick( View view ){
+                // on click, launch the addbook activity, whatever the pane mode
                 Intent intent = new Intent( MainActivity.this, EditActivity.class );
                 startActivityForResult( intent, ADD_REQUEST_CODE );
             }
 
         } );
 
-
-        if( findViewById( R.id.book_detail_container ) != null ){
-            // The detail container view will be present only in the
-            // large-screen layouts (res/values-w900dp).
-            // If this view is present, then the
-            // activity should be in two-pane mode.
-            mTwoPane = true;
-        }
     }
 
 
@@ -160,8 +172,10 @@ public class MainActivity extends AppCompatActivity implements EditFragment.Edit
     protected void onResume(){
         super.onResume();
         mReceiver.registerSelf( this );
-        if( mRev != null && !mRev.equals( mService.getLatestRev() ) ){
-            mAdapter.setBooksList( mService.getBooks() );
+        if( mRev == null || !mRev.equals( mService.getLatestRev() ) ){
+            // either books not already loaded, or changes happened
+            List<Book> books = mService.getBooks();
+            if( books != null ) mAdapter.setBooksList( books );
         }
     }
 
@@ -175,14 +189,13 @@ public class MainActivity extends AppCompatActivity implements EditFragment.Edit
 
     @Override
     protected void onActivityResult( int requestCode, int resultCode, Intent data ){
+        // nothing special to do, just log the event
         if( requestCode == ADD_REQUEST_CODE || requestCode == EDIT_REQUEST_CODE ){
             Log.d( getPackageName(), "Activity result " + resultCode );
         }else{
             super.onActivityResult( requestCode, resultCode, data );
         }
     }
-
-    // ----------------------------------------------------
 
     // ----------------------------------------------------
 
@@ -221,54 +234,22 @@ public class MainActivity extends AppCompatActivity implements EditFragment.Edit
     }
 
 
-    // ----------------------------------------------------
     @Override
     public boolean onCreateOptionsMenu( Menu menu ){
         getMenuInflater().inflate( R.menu.toolbar_menu_list, menu );
+
+        // get the reference to the hidden/shown menu items in two pane mode
+        // the clicks will be handled in {@ref onOptionsItemSelected}
         mActionDelete = menu.findItem( R.id.action_delete );
         mActionSave = menu.findItem( R.id.action_save );
         mActionEdit = menu.findItem( R.id.action_edit );
 
-        mActionDelete.setOnMenuItemClickListener( new MenuItem.OnMenuItemClickListener(){
-            @Override
-            public boolean onMenuItemClick( MenuItem item ){
-                DboxService.getInstance().deleteBook( mTwoPaneBook.title );
-                showNoFragment();
-                return true;
-            }
-        } );
-
-        mActionSave.setOnMenuItemClickListener( new MenuItem.OnMenuItemClickListener(){
-            @Override
-            public boolean onMenuItemClick( MenuItem item ){
-                if( mSaveListener != null ){
-                    mSaveListener.onClick( null );
-                    return true;
-                }
-                return false;
-            }
-        } );
-
-        mActionEdit.setOnMenuItemClickListener( new MenuItem.OnMenuItemClickListener(){
-            @Override
-            public boolean onMenuItemClick( MenuItem item ){
-                assert mTwoPaneBook != null;
-                showEditFragment( mTwoPaneBook );
-                return true;
-            }
-        } );
-
-
-        final MenuItem searchMenuItem = menu.findItem( R.id.action_search );
-        final SearchView searchView = ( SearchView ) searchMenuItem.getActionView();
+        // handle the search bar
+        final SearchView searchView = ( SearchView ) menu.findItem( R.id.action_search ).getActionView();
         searchView.setOnQueryTextListener( new SearchView.OnQueryTextListener(){
             @Override
             public boolean onQueryTextSubmit( String query ){
-                // todo
-                //                if( !searchView.isIconified() ){
-                //                    searchView.setIconified( true );
-                //                }
-                //                searchMenuItem.collapseActionView();
+                // use the default behavior
                 return false;
             }
 
@@ -285,14 +266,32 @@ public class MainActivity extends AppCompatActivity implements EditFragment.Edit
 
     @Override
     public boolean onOptionsItemSelected( MenuItem item ){
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
+        // the action bar will automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
+
         int id = item.getItemId();
+
         if( id == R.id.action_sync ){
             mService.startFetchBooks();
             Toast.makeText( this, "checking Dropbox server...", Toast.LENGTH_SHORT ).show();
             return true;
+
+        }else if( item == mActionDelete ){
+            DboxService.getInstance().deleteBook( mTwoPaneBook.title );
+            showNoFragment();
+            return true;
+
+        }else if( item == mActionEdit ){
+            assert mTwoPaneBook != null;
+            showEditFragment( mTwoPaneBook );
+            return true;
+
+        }else if( item == mActionSave ){
+            if( mSaveListener != null ){
+                mSaveListener.onClick( null );
+                return true;
+            }
+            return false;
         }
         return super.onOptionsItemSelected( item );
     }
@@ -302,26 +301,18 @@ public class MainActivity extends AppCompatActivity implements EditFragment.Edit
 
 
     private void bookSelected( final Book book ){
-
-        if( currentState == State.EDIT ){
-            showDetailsFragment( book );
-        }else{
-            showDetailsFragment( book );
-        }
-        //            new AlertDialog.Builder( this )  //
-        //                    .setMessage( "You have unsaved changes. Continue ?" )//
-        //                    .setIcon( android.R.drawable.ic_dialog_alert ) //
-        //                    .setPositiveButton( android.R.string.yes, new DialogInterface.OnClickListener(){
-        //
-        //                        public void onClick( DialogInterface dialog, int whichButton ){
-        //                            showDetailsFragment( book );
-        //                        }
-        //                    } ).setNegativeButton( android.R.string.no, null ).show();
+        // in a special function, because at first I wanted
+        // to show a confirm dialog if in edit mode to avoid
+        // loosing unsaved changes. Problem: detecting
+        // unsaved changes !
+        showDetailsFragment( book );
 
     }
 
 
     private void showNoFragment(){
+        // remove all the fragment, in case the currently showing book is
+        // deleted
         List<Fragment> fragments = getSupportFragmentManager().getFragments();
         if( fragments != null ){
             for( Fragment fragment : fragments ){
@@ -332,41 +323,47 @@ public class MainActivity extends AppCompatActivity implements EditFragment.Edit
 
 
     private void showDetailsFragment( Book book ){
-
+        // update the toolbar
         mActionDelete.setVisible( true );
         mActionEdit.setVisible( true );
         mActionSave.setVisible( false );
 
+        // launch the fragment
         Bundle arguments = new Bundle();
         arguments.putString( MainActivity.ARG_BOOK_TITLE, book.title );
         DetailFragment fragment = new DetailFragment();
         fragment.setArguments( arguments );
         getSupportFragmentManager().beginTransaction().replace( R.id.book_detail_container, fragment ).commit();
 
+        // update the state
         mTwoPaneBook = book;
-        currentState = State.DETAILS;
+        mCurrentState = State.DETAILS;
     }
 
 
     private void showEditFragment( Book book ){
 
+        // update the toolbar
         mActionDelete.setVisible( false );
         mActionEdit.setVisible( false );
         mActionSave.setVisible( true );
 
+        // launch the fragment
         Bundle arguments = new Bundle();
         arguments.putString( MainActivity.ARG_BOOK_TITLE, book.title );
         EditFragment fragment = new EditFragment();
         fragment.setArguments( arguments );
         getSupportFragmentManager().beginTransaction().replace( R.id.book_detail_container, fragment ).commit();
 
+        // update the state
         mTwoPaneBook = book;
-        currentState = State.EDIT;
+        mCurrentState = State.EDIT;
     }
 
 
     @Override
     public void attachSaveListener( final View.OnClickListener listener ){
+        // used by the {@link EditFragment}, {@see EditFragmentHolder}
         mSaveListener = listener;
 
     }
@@ -374,6 +371,7 @@ public class MainActivity extends AppCompatActivity implements EditFragment.Edit
 
     @Override
     public void done( Book book, boolean actionDone ){
+        // used by the {@link EditFragment}, {@see EditFragmentHolder}
         mSaveListener = null;
         showDetailsFragment( book );
     }
@@ -381,8 +379,11 @@ public class MainActivity extends AppCompatActivity implements EditFragment.Edit
 
     @Override
     public void onBackPressed(){
-        if( currentState == State.EDIT ){
+        if( mCurrentState == State.EDIT ){
+            // if state changed, necessarily in two panes mode,
+            // go back to the details fragment
             bookSelected( mTwoPaneBook );
+
         }else{
             super.onBackPressed();
         }
@@ -454,8 +455,10 @@ public class MainActivity extends AppCompatActivity implements EditFragment.Edit
                 public void onClick( View v ){
                     if( mTwoPane ){
                         bookSelected( holder.mBook );
+
                     }else{
-                        // todo: don't destroy current activity
+                        // todo: don't destroy current activity ?
+                        // launch activity
                         Context context = v.getContext();
                         Intent intent = new Intent( context, DetailActivity.class );
                         intent.setFlags( Intent.FLAG_ACTIVITY_REORDER_TO_FRONT );

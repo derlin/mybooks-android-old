@@ -14,19 +14,42 @@ import ch.derlin.mybooks.books.Book;
 import ch.derlin.mybooks.service.DboxBroadcastReceiver;
 import ch.derlin.mybooks.service.DboxService;
 import ch.derlin.mybooks.views.MainActivity;
-import ch.derlin.mybooks.views.details.DetailActivity;
 
 /**
  * A fragment representing a single Book detail screen.
  * This fragment is either contained in a {@link MainActivity}
- * in two-pane mode (on tablets) or a {@link DetailActivity}
+ * in two-pane mode (on tablets) or a {@link EditActivity}
  * on handsets.
+ * The containing activity must implement the {@ref EditFragmentHolder}
+ * interface for the "save" and "cancel" options to work.
+ * <br />----------------------------------------------------<br/>
+ * Derlin - MyBooks Android, May, 2016
+ *
+ * @author Lucy Linder
  */
 public class EditFragment extends Fragment implements View.OnClickListener{
-
+    /**
+     * Interface which must be implemented by the attached activity.
+     */
     public interface EditFragmentHolder{
+        /**
+         * the fragment will call this method to attach its
+         * save callback. It is the responsibility of the activity
+         * to attach it to the proper button (fab, toolbar item, ...)
+         *
+         * @param listener the save callback
+         */
         void attachSaveListener( View.OnClickListener listener );
 
+        /**
+         * the fragment will call this method when the task is finished.
+         * A boolean to true ensures that the book has been saved to dropbox, while a
+         * boolean to false acts like a "cancel".
+         * been saved.
+         *
+         * @param book       the edited book
+         * @param actionDone true if saved, false if canceled.
+         */
         void done( Book book, boolean actionDone );
     }
 
@@ -42,6 +65,7 @@ public class EditFragment extends Fragment implements View.OnClickListener{
 
         @Override
         protected void onUploadOk(){
+            // feedback and return
             Toast.makeText( getActivity(), "changes saved.", Toast.LENGTH_LONG ).show();
             mHolder.done( mBook, true );
         }
@@ -49,10 +73,10 @@ public class EditFragment extends Fragment implements View.OnClickListener{
 
     // ----------------------------------------------------
     private Book mBook;
-    private String mOldTitle;
+    private String mOldTitle; // the key for the dropbox service, in
+    // case the title is also modified
 
     private EditText mEditTitle, mEditAuthor, mEditDate, mEditNotes;
-    private DboxService mService;
 
     private EditFragmentHolder mHolder;
 
@@ -73,12 +97,12 @@ public class EditFragment extends Fragment implements View.OnClickListener{
 
 
         Activity activity = this.getActivity();
+        DboxService mService = DboxService.getInstance();
 
-        mService = DboxService.getInstance();
-
+        // initialise the book
         mBook = new Book();
         mOldTitle = getArguments().getString( MainActivity.ARG_BOOK_TITLE );
-        if( mOldTitle != null ) mBook = mService.getBook( mOldTitle );
+        if( mOldTitle != null ) mBook = mService.getBook( mOldTitle ); // edit vs add mode
 
 
         CollapsingToolbarLayout appBarLayout = ( CollapsingToolbarLayout ) activity.findViewById( R.id.toolbar_layout );

@@ -10,10 +10,16 @@ import ch.derlin.mybooks.books.Book;
 import static ch.derlin.mybooks.service.DboxConstants.*;
 
 /**
- * Context:
+ * Simplify the communication with the {@link DboxService} broadcast manager.
+ * How to use:
+ * - instantiate a new DboxBroadcastReceiver in a private variable
+ * and override the method which you will use.
+ * - call {@ref registerReceiver} in the onResume method and
+ * {@ref unregisterReceiver} in the onPause method.
+ * <br />----------------------------------------------------<br/>
+ * Derlin - MyBooks Android, May, 2016
  *
  * @author Lucy Linder
- *         Date 20.04.16.
  */
 public class DboxBroadcastReceiver extends BroadcastReceiver{
     private static final IntentFilter INTENT_FILTER = new IntentFilter( DBXS_INTENT_FILTER );
@@ -71,6 +77,7 @@ public class DboxBroadcastReceiver extends BroadcastReceiver{
         // pass
     }
 
+
     protected void onBooksUnchanged(){
         // pass
     }
@@ -86,8 +93,8 @@ public class DboxBroadcastReceiver extends BroadcastReceiver{
     }
 
 
-    public void onBookDeleted( Book book ){
-
+    public void onBookDeleted( Book deletedBook ){
+        // pass
     }
 
 }

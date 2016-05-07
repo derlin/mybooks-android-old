@@ -1,10 +1,11 @@
 package ch.derlin.mybooks.service;
 
 /**
- * Context:
+ * All the constants used by the {@link DboxService} broadcast manager.
+ * <br />----------------------------------------------------<br/>
+ * Derlin - MyBooks Android, May, 2016
  *
  * @author Lucy Linder
- *         Date 18.04.16.
  */
 public class DboxConstants{
 

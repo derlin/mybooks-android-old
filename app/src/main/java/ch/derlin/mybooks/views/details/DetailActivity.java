@@ -17,22 +17,29 @@ import ch.derlin.mybooks.views.edit.EditActivity;
 
 /**
  * An activity representing a single Book detail screen. This
- * activity is only used narrow width devices. On tablet-size devices,
+ * activity is only used on narrow width devices. On tablet-size devices,
  * item details are presented side-by-side with a list of items
  * in a {@link MainActivity}.
+ * <br />----------------------------------------------------<br/>
+ * Derlin - MyBooks Android, May, 2016
+ *
+ * @author Lucy Linder
  */
 public class DetailActivity extends AppCompatActivity{
 
-    private String mBookTitle;
+    private String mBookTitle; // current title shown
 
 
     @Override
     protected void onCreate( Bundle savedInstanceState ){
         super.onCreate( savedInstanceState );
         setContentView( R.layout.activity_detail );
+
+        // set toolbar
         Toolbar toolbar = ( Toolbar ) findViewById( R.id.detail_toolbar );
         setSupportActionBar( toolbar );
 
+        // set floating button to edit action
         FloatingActionButton fab = ( FloatingActionButton ) findViewById( R.id.fab );
         fab.setImageDrawable( getResources().getDrawable( android.R.drawable.ic_menu_edit, getTheme() ) );
         fab.setOnClickListener( new View.OnClickListener(){
@@ -66,7 +73,6 @@ public class DetailActivity extends AppCompatActivity{
             // using a fragment transaction.
             mBookTitle = getIntent().getStringExtra( MainActivity.ARG_BOOK_TITLE );
             Bundle arguments = new Bundle();
-
             arguments.putString( MainActivity.ARG_BOOK_TITLE, mBookTitle );
             DetailFragment fragment = new DetailFragment();
             fragment.setArguments( arguments );

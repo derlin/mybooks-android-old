@@ -13,11 +13,16 @@ import ch.derlin.mybooks.books.Book;
 import ch.derlin.mybooks.service.DboxService;
 import ch.derlin.mybooks.views.MainActivity;
 
+
 /**
  * A fragment representing a single Book detail screen.
  * This fragment is either contained in a {@link MainActivity}
  * in two-pane mode (on tablets) or a {@link DetailActivity}
  * on handsets.
+ * <br />----------------------------------------------------<br/>
+ * Derlin - MyBooks Android, May, 2016
+ *
+ * @author Lucy Linder
  */
 public class DetailFragment extends Fragment{
 

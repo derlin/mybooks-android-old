@@ -13,14 +13,16 @@ import ch.derlin.mybooks.books.Book;
 import ch.derlin.mybooks.views.MainActivity;
 
 /**
- * An activity representing a single Book detail screen. This
- * activity is only used narrow width devices. On tablet-size devices,
- * item details are presented side-by-side with a list of items
- * in a {@link MainActivity}.
+ * An activity representing an add/edit screen.
+ * The edit feature is handled by this activity only on narrow width devices.
+ * <br />----------------------------------------------------<br/>
+ * Derlin - MyBooks Android, May, 2016
+ *
+ * @author Lucy Linder
  */
 public class EditActivity extends AppCompatActivity implements EditFragment.EditFragmentHolder{
 
-    private View.OnClickListener mListener;
+    private View.OnClickListener mListener; // the save callback of the editFragment
 
 
     @Override
@@ -37,18 +39,8 @@ public class EditActivity extends AppCompatActivity implements EditFragment.Edit
             actionBar.setDisplayHomeAsUpEnabled( true );
         }
 
-        // savedInstanceState is non-null when there is fragment state
-        // saved from previous configurations of this activity
-        // (e.g. when rotating the screen from portrait to landscape).
-        // In this case, the fragment will automatically be re-added
-        // to its container so we don't need to manually add it.
-        // For more information, see the Fragments API guide at:
-        //
-        // http://developer.android.com/guide/components/fragments.html
-        //
         if( savedInstanceState == null ){
-            // Create the detail fragment and add it to the activity
-            // using a fragment transaction.
+            // create the detail fragment
             Bundle arguments = new Bundle();
             String bookTitle = getIntent().getStringExtra( MainActivity.ARG_BOOK_TITLE );
             setTitle( bookTitle == null ? "New Book" : bookTitle );
