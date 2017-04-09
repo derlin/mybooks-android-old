@@ -35,8 +35,8 @@ import java.util.List;
  * - displays a list of books (title-author)
  * - displays a fab to add books, launching the {@link EditActivity}
  * - launches the {@link DetailActivity}  on list item click
- * <p>
- * <p>
+ * <p/>
+ * <p/>
  * In "two-pane" mode, {@ref mTwoPane}, it does pretty everything, except the add book.
  * - the fab does not change (add books)
  * - details and edit happen in a fragment on the left
@@ -44,9 +44,10 @@ import java.util.List;
  * on the current fragment
  * - the switch between fragments as well as the book currently shown/edited are kept in the
  * {@ref mCurrentState} and {@ref mTwoPaneBook} variables
- * <p>
- *  <br />----------------------------------------------------<br/>
- *  Derlin - MyBooks Android, May, 2016
+ * <p/>
+ * <br />----------------------------------------------------<br/>
+ * Derlin - MyBooks Android, May, 2016
+ *
  * @author Lucy Linder
  */
 public class MainActivity extends AppCompatActivity implements EditFragment.EditFragmentHolder{
@@ -148,9 +149,8 @@ public class MainActivity extends AppCompatActivity implements EditFragment.Edit
         setRecyclerViewLayoutManager( recyclerView, mAdapter );
 
         // display the toolbar
-        Toolbar toolbar = ( Toolbar ) findViewById( R.id.toolbar );
-        setSupportActionBar( toolbar );
-        toolbar.setTitle( getTitle() );
+        setSupportActionBar( ( Toolbar ) findViewById( R.id.toolbar ) );
+        getSupportActionBar().setIcon( R.mipmap.ic_launcher );
 
         // floating button management
         mFab = ( FloatingActionButton ) findViewById( R.id.fab );
