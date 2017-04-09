@@ -148,6 +148,8 @@ public class MainActivity extends AppCompatActivity implements EditFragment.Edit
             mAdapter = new BooksAdapter();
         }
 
+        mAdapter.setCounterView((TextView) findViewById(R.id.text_book_counter));
+
         // setup recyclerview (listview)
         RecyclerView recyclerView = (RecyclerView) findViewById(R.id.book_list);
         setRecyclerViewLayoutManager(recyclerView, mAdapter);
@@ -415,6 +417,7 @@ public class MainActivity extends AppCompatActivity implements EditFragment.Edit
 
         private List<Book> mBooksList;
         private List<Book> mOriginalBooksList;
+        private TextView counterView;
 
         private Comparator<Book> bookComparator = Book.TITLE_COMPARATOR;
         private int sortOrder = 1;
@@ -426,9 +429,8 @@ public class MainActivity extends AppCompatActivity implements EditFragment.Edit
             }
         };
 
-        public BooksAdapter(List<Book> items) {
-            mBooksList = new ArrayList<>(items);
-            mOriginalBooksList = new ArrayList<>(items);
+        public BooksAdapter(List<Book> books) {
+            setBooksList(books);
         }
 
 
@@ -441,7 +443,13 @@ public class MainActivity extends AppCompatActivity implements EditFragment.Edit
         public void setBooksList(List<Book> books) {
             mOriginalBooksList = new ArrayList<>(books);
             mBooksList = mOriginalBooksList;
+            updateCounter();
             notifyDataSetChanged();
+        }
+
+        public void setCounterView(TextView counterView) {
+            this.counterView = counterView;
+            updateCounter();
         }
 
 
@@ -477,7 +485,12 @@ public class MainActivity extends AppCompatActivity implements EditFragment.Edit
 
         public void sort() {
             Collections.sort(mBooksList, adapterComparator);
+            updateCounter();
             notifyDataSetChanged();
+        }
+
+        void updateCounter(){
+            if(counterView != null) counterView.setText("" + mBooksList.size());
         }
 
 
