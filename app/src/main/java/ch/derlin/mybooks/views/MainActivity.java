@@ -443,8 +443,7 @@ public class MainActivity extends AppCompatActivity implements EditFragment.Edit
         public void setBooksList(List<Book> books) {
             mOriginalBooksList = new ArrayList<>(books);
             mBooksList = mOriginalBooksList;
-            updateCounter();
-            notifyDataSetChanged();
+            sort();
         }
 
         public void setCounterView(TextView counterView) {

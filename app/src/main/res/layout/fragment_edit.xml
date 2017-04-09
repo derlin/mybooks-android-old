@@ -37,7 +37,7 @@
 
             <EditText
                 android:id="@+id/details_author"
-                android:inputType="textCapSentences"
+                android:inputType="textCapWords"
                 style="@style/details_value_edit"
                 android:hint="Mister X" />
 
