@@ -7,9 +7,33 @@
     <item
         android:id="@+id/action_search"
         android:icon="@android:drawable/ic_menu_search"
-        app:showAsAction="always|collapseActionView"
+        android:title="Search"
         app:actionViewClass="android.support.v7.widget.SearchView"
-        android:title="Search"/>
+        app:showAsAction="always|collapseActionView" />
+
+    <item
+        android:icon="@android:drawable/ic_menu_sort_alphabetically"
+        app:showAsAction="always">
+        <menu>
+            <group
+                android:id="@+id/group_menu_sort"
+                android:checkableBehavior="single">
+                <item
+                    android:id="@+id/submenu_sort_title_asc"
+                    android:checked="true"
+                    android:title="Title asc" />
+                <item
+                    android:id="@+id/submenu_sort_title_desc"
+                    android:title="Title desc" />
+                <item
+                    android:id="@+id/submenu_sort_year_asc"
+                    android:title="Year asc" />
+                <item
+                    android:id="@+id/submenu_sort_year_desc"
+                    android:title="Year desc" />
+            </group>
+        </menu>
+    </item>
 
     <item
         android:id="@+id/action_sync"

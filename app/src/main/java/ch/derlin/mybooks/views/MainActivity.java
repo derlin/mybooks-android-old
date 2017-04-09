@@ -16,6 +16,7 @@ import android.view.*;
 import android.widget.SectionIndexer;
 import android.widget.TextView;
 import android.widget.Toast;
+
 import ch.derlin.mybooks.R;
 import ch.derlin.mybooks.books.Book;
 import ch.derlin.mybooks.service.DboxBroadcastReceiver;
@@ -28,6 +29,8 @@ import xyz.danoz.recyclerviewfastscroller.sectionindicator.SectionIndicator;
 import xyz.danoz.recyclerviewfastscroller.vertical.VerticalRecyclerViewFastScroller;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -50,7 +53,7 @@ import java.util.List;
  *
  * @author Lucy Linder
  */
-public class MainActivity extends AppCompatActivity implements EditFragment.EditFragmentHolder{
+public class MainActivity extends AppCompatActivity implements EditFragment.EditFragmentHolder {
 
     public static final String ARG_BOOK_TITLE = "book_title";
     private static final int ADD_REQUEST_CODE = 0;
@@ -66,54 +69,55 @@ public class MainActivity extends AppCompatActivity implements EditFragment.Edit
 
     // -------- used only in two panes mode:
 
-    private enum State{
+    private enum State {
         NONE, DETAILS, EDIT // what type of fragment is on the right pane
     }
 
     private State mCurrentState = State.NONE; // current fragment type
-    private MenuItem mActionDelete, mActionEdit, mActionSave; // the toolbar buttons
+    private MenuItem mActionDelete, mActionEdit, mActionSave, mActionSort; // the toolbar buttons
     private View.OnClickListener mSaveListener; // the save listener from the EditFragment
     private Book mTwoPaneBook = null; // the book currently shown/edited, if any
 
 
     // ----------------------------------------------------
 
-    private DboxBroadcastReceiver mReceiver = new DboxBroadcastReceiver(){
+    private DboxBroadcastReceiver mReceiver = new DboxBroadcastReceiver() {
         @Override
-        protected void onBooksChanged( String rev ){
-            if( mRev != null ) Snackbar.make( mFab, "External changes. Updating.", Snackbar.LENGTH_LONG ).show();
-            mAdapter.setBooksList( mService.getBooks() );
+        protected void onBooksChanged(String rev) {
+            if (mRev != null)
+                Snackbar.make(mFab, "External changes. Updating.", Snackbar.LENGTH_LONG).show();
+            mAdapter.setBooksList(mService.getBooks());
             mRev = rev;
         }
 
 
         @Override
-        protected void onError( String msg ){
-            Toast.makeText( MainActivity.this, msg, Toast.LENGTH_LONG ).show();
+        protected void onError(String msg) {
+            Toast.makeText(MainActivity.this, msg, Toast.LENGTH_LONG).show();
         }
 
 
         @Override
-        protected void onUploadOk(){
-            Snackbar.make( mFab, "Changes saved.", Snackbar.LENGTH_LONG ).show();
+        protected void onUploadOk() {
+            Snackbar.make(mFab, "Changes saved.", Snackbar.LENGTH_LONG).show();
         }
 
 
         @Override
-        protected void onBooksUnchanged(){
-            Snackbar.make( mFab, "Books up to date.", Snackbar.LENGTH_LONG ).show();
+        protected void onBooksUnchanged() {
+            Snackbar.make(mFab, "Books up to date.", Snackbar.LENGTH_LONG).show();
         }
 
 
         @Override
-        public void onBookDeleted( final Book book ){
-            Snackbar.make( mFab, "book deleted.", Snackbar.LENGTH_LONG ).setAction( "undo", new View.OnClickListener(){
+        public void onBookDeleted(final Book book) {
+            Snackbar.make(mFab, "book deleted.", Snackbar.LENGTH_LONG).setAction("undo", new View.OnClickListener() {
                 @Override
-                public void onClick( View v ){
-                    mService.addBook( book );
-                    if( mTwoPane ) showDetailsFragment( book );
+                public void onClick(View v) {
+                    mService.addBook(book);
+                    if (mTwoPane) showDetailsFragment(book);
                 }
-            } ).show();
+            }).show();
         }
     };
 
@@ -121,79 +125,79 @@ public class MainActivity extends AppCompatActivity implements EditFragment.Edit
 
 
     @Override
-    protected void onCreate( Bundle savedInstanceState ){
-        super.onCreate( savedInstanceState );
-        setContentView( R.layout.activity_main );
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
 
 
         // check the pane mode
-        if( findViewById( R.id.book_detail_container ) != null ){
+        if (findViewById(R.id.book_detail_container) != null) {
             mTwoPane = true;
         }
 
         // the StartActivity ensures that the service is running --> should not be null
         mService = DboxService.getInstance();
 
-        if( mService != null && mService.getBooks() != null ){
+        if (mService != null && mService.getBooks() != null) {
             // if the books are already loaded
-            mAdapter = new BooksAdapter( mService.getBooks() );
+            mAdapter = new BooksAdapter(mService.getBooks());
             mRev = mService.getLatestRev();
 
-        }else{
+        } else {
             // if not loaded, the broadcast receiver's onChange method will be called soon
             mAdapter = new BooksAdapter();
         }
 
         // setup recyclerview (listview)
-        RecyclerView recyclerView = ( RecyclerView ) findViewById( R.id.book_list );
-        setRecyclerViewLayoutManager( recyclerView, mAdapter );
+        RecyclerView recyclerView = (RecyclerView) findViewById(R.id.book_list);
+        setRecyclerViewLayoutManager(recyclerView, mAdapter);
 
         // display the toolbar
-        setSupportActionBar( ( Toolbar ) findViewById( R.id.toolbar ) );
-        getSupportActionBar().setIcon( R.mipmap.ic_launcher );
+        setSupportActionBar((Toolbar) findViewById(R.id.toolbar));
+        getSupportActionBar().setIcon(R.mipmap.ic_launcher);
 
         // floating button management
-        mFab = ( FloatingActionButton ) findViewById( R.id.fab );
-        mFab.setOnClickListener( new View.OnClickListener(){
+        mFab = (FloatingActionButton) findViewById(R.id.fab);
+        mFab.setOnClickListener(new View.OnClickListener() {
 
             @Override
-            public void onClick( View view ){
+            public void onClick(View view) {
                 // on click, launch the addbook activity, whatever the pane mode
-                Intent intent = new Intent( MainActivity.this, EditActivity.class );
-                startActivityForResult( intent, ADD_REQUEST_CODE );
+                Intent intent = new Intent(MainActivity.this, EditActivity.class);
+                startActivityForResult(intent, ADD_REQUEST_CODE);
             }
 
-        } );
+        });
 
     }
 
 
     @Override
-    protected void onResume(){
+    protected void onResume() {
         super.onResume();
-        mReceiver.registerSelf( this );
-        if( mRev == null || !mRev.equals( mService.getLatestRev() ) ){
+        mReceiver.registerSelf(this);
+        if (mRev == null || !mRev.equals(mService.getLatestRev())) {
             // either books not already loaded, or changes happened
             List<Book> books = mService.getBooks();
-            if( books != null ) mAdapter.setBooksList( books );
+            if (books != null) mAdapter.setBooksList(books);
         }
     }
 
 
     @Override
-    protected void onPause(){
+    protected void onPause() {
         super.onPause();
-        mReceiver.unregisterSelf( this );
+        mReceiver.unregisterSelf(this);
     }
 
 
     @Override
-    protected void onActivityResult( int requestCode, int resultCode, Intent data ){
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         // nothing special to do, just log the event
-        if( requestCode == ADD_REQUEST_CODE || requestCode == EDIT_REQUEST_CODE ){
-            Log.d( getPackageName(), "Activity result " + resultCode );
-        }else{
-            super.onActivityResult( requestCode, resultCode, data );
+        if (requestCode == ADD_REQUEST_CODE || requestCode == EDIT_REQUEST_CODE) {
+            Log.d(getPackageName(), "Activity result " + resultCode);
+        } else {
+            super.onActivityResult(requestCode, resultCode, data);
         }
     }
 
@@ -203,137 +207,148 @@ public class MainActivity extends AppCompatActivity implements EditFragment.Edit
     /**
      * Set RecyclerView's LayoutManager
      */
-    public void setRecyclerViewLayoutManager( RecyclerView recyclerView, RecyclerView.Adapter adapter ){
+    public void setRecyclerViewLayoutManager(RecyclerView recyclerView, RecyclerView.Adapter adapter) {
 
         // ---------- init recycler
 
-        LinearLayoutManager linearLayoutManager = new LinearLayoutManager( this );
-        recyclerView.setLayoutManager( linearLayoutManager );
-        recyclerView.setAdapter( adapter );
+        LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
+        recyclerView.setLayoutManager(linearLayoutManager);
+        recyclerView.setAdapter(adapter);
 
         int scrollPosition = linearLayoutManager.findFirstCompletelyVisibleItemPosition();
-        recyclerView.scrollToPosition( scrollPosition );
+        recyclerView.scrollToPosition(scrollPosition);
 
         // ---------- set index on the right
 
-        VerticalRecyclerViewFastScroller fastScroller = ( VerticalRecyclerViewFastScroller ) findViewById( R.id
-                .fast_scroller );
+        VerticalRecyclerViewFastScroller fastScroller = (VerticalRecyclerViewFastScroller) findViewById(R.id
+                .fast_scroller);
 
         // Connect the recycler to the scroller (to let the scroller scroll the list)
-        fastScroller.setRecyclerView( recyclerView );
+        fastScroller.setRecyclerView(recyclerView);
 
         // Connect the scroller to the recycler (to let the recycler scroll the scroller's handle)
-        recyclerView.addOnScrollListener( fastScroller.getOnScrollListener() );
+        recyclerView.addOnScrollListener(fastScroller.getOnScrollListener());
 
         // Connect the section indicator to the scroller
-        SectionIndicator sectionTitleIndicator = ( SectionIndicator ) findViewById( R.id
-                .fast_scroller_section_title_indicator );
+        SectionIndicator sectionTitleIndicator = (SectionIndicator) findViewById(R.id
+                .fast_scroller_section_title_indicator);
 
-        fastScroller.setSectionIndicator( sectionTitleIndicator );
+        fastScroller.setSectionIndicator(sectionTitleIndicator);
 
     }
 
 
     @Override
-    public boolean onCreateOptionsMenu( Menu menu ){
-        getMenuInflater().inflate( R.menu.toolbar_menu_list, menu );
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.toolbar_menu_list, menu);
 
         // get the reference to the hidden/shown menu items in two pane mode
         // the clicks will be handled in {@ref onOptionsItemSelected}
-        mActionDelete = menu.findItem( R.id.action_delete );
-        mActionSave = menu.findItem( R.id.action_save );
-        mActionEdit = menu.findItem( R.id.action_edit );
+        mActionDelete = menu.findItem(R.id.action_delete);
+        mActionSave = menu.findItem(R.id.action_save);
+        mActionEdit = menu.findItem(R.id.action_edit);
 
         // handle the search bar
-        final SearchView searchView = ( SearchView ) menu.findItem( R.id.action_search ).getActionView();
-        searchView.setOnQueryTextListener( new SearchView.OnQueryTextListener(){
+        final SearchView searchView = (SearchView) menu.findItem(R.id.action_search).getActionView();
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
-            public boolean onQueryTextSubmit( String query ){
+            public boolean onQueryTextSubmit(String query) {
                 // use the default behavior
                 return false;
             }
 
 
             @Override
-            public boolean onQueryTextChange( String s ){
-                mAdapter.filter( s );
+            public boolean onQueryTextChange(String s) {
+                mAdapter.filter(s);
                 return false;
             }
-        } );
+        });
         return true;
     }
 
 
     @Override
-    public boolean onOptionsItemSelected( MenuItem item ){
+    public boolean onOptionsItemSelected(MenuItem item) {
         // the action bar will automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
 
         int id = item.getItemId();
 
-        if( id == R.id.action_sync ){
+        if (id == R.id.action_sync) {
             mService.startFetchBooks();
-            Toast.makeText( this, "checking Dropbox server...", Toast.LENGTH_SHORT ).show();
+            Toast.makeText(this, "checking Dropbox server...", Toast.LENGTH_SHORT).show();
             return true;
 
-        }else if( item == mActionDelete ){
-            DboxService.getInstance().deleteBook( mTwoPaneBook.title );
+        } else if (item == mActionDelete) {
+            DboxService.getInstance().deleteBook(mTwoPaneBook.title);
             showNoFragment();
             return true;
 
-        }else if( item == mActionEdit ){
+        } else if (item == mActionEdit) {
             assert mTwoPaneBook != null;
-            showEditFragment( mTwoPaneBook );
+            showEditFragment(mTwoPaneBook);
             return true;
 
-        }else if( item == mActionSave ){
-            if( mSaveListener != null ){
-                mSaveListener.onClick( null );
+        } else if (item == mActionSave) {
+            if (mSaveListener != null) {
+                mSaveListener.onClick(null);
                 return true;
             }
             return false;
+        } else if (item.getGroupId() == R.id.group_menu_sort && !item.isChecked()) {
+            item.setChecked(true);
+            if (id == R.id.submenu_sort_title_asc) {
+                mAdapter.setSortOrder(SortType.TITLE, true);
+            } else if (id == R.id.submenu_sort_title_desc) {
+                mAdapter.setSortOrder(SortType.TITLE, false);
+            } else if (id == R.id.submenu_sort_year_asc) {
+                mAdapter.setSortOrder(SortType.DATE, true);
+            } else if (id == R.id.submenu_sort_year_desc) {
+                mAdapter.setSortOrder(SortType.DATE, false);
+            }
         }
-        return super.onOptionsItemSelected( item );
+        return super.onOptionsItemSelected(item);
     }
 
 
     // ----------------------------------------------------
 
 
-    private void bookSelected( final Book book ){
+    private void bookSelected(final Book book) {
         // in a special function, because at first I wanted
         // to show a confirm dialog if in edit mode to avoid
         // loosing unsaved changes. Problem: detecting
         // unsaved changes !
-        showDetailsFragment( book );
+        showDetailsFragment(book);
 
     }
 
 
-    private void showNoFragment(){
+    private void showNoFragment() {
         // remove all the fragment, in case the currently showing book is
         // deleted
         List<Fragment> fragments = getSupportFragmentManager().getFragments();
-        if( fragments != null ){
-            for( Fragment fragment : fragments ){
-                getSupportFragmentManager().beginTransaction().remove( fragment ).commit();
+        if (fragments != null) {
+            for (Fragment fragment : fragments) {
+                getSupportFragmentManager().beginTransaction().remove(fragment).commit();
             }
         }
     }
 
 
-    private void showDetailsFragment( Book book ){
+    private void showDetailsFragment(Book book) {
         // update the toolbar
-        mActionDelete.setVisible( true );
-        mActionEdit.setVisible( true );
-        mActionSave.setVisible( false );
+        mActionDelete.setVisible(true);
+        mActionEdit.setVisible(true);
+        mActionSave.setVisible(false);
 
         // launch the fragment
         Bundle arguments = new Bundle();
-        arguments.putString( MainActivity.ARG_BOOK_TITLE, book.title );
+        arguments.putString(MainActivity.ARG_BOOK_TITLE, book.title);
         DetailFragment fragment = new DetailFragment();
-        fragment.setArguments( arguments );
-        getSupportFragmentManager().beginTransaction().replace( R.id.book_detail_container, fragment ).commit();
+        fragment.setArguments(arguments);
+        getSupportFragmentManager().beginTransaction().replace(R.id.book_detail_container, fragment).commit();
 
         // update the state
         mTwoPaneBook = book;
@@ -341,19 +356,19 @@ public class MainActivity extends AppCompatActivity implements EditFragment.Edit
     }
 
 
-    private void showEditFragment( Book book ){
+    private void showEditFragment(Book book) {
 
         // update the toolbar
-        mActionDelete.setVisible( false );
-        mActionEdit.setVisible( false );
-        mActionSave.setVisible( true );
+        mActionDelete.setVisible(false);
+        mActionEdit.setVisible(false);
+        mActionSave.setVisible(true);
 
         // launch the fragment
         Bundle arguments = new Bundle();
-        arguments.putString( MainActivity.ARG_BOOK_TITLE, book.title );
+        arguments.putString(MainActivity.ARG_BOOK_TITLE, book.title);
         EditFragment fragment = new EditFragment();
-        fragment.setArguments( arguments );
-        getSupportFragmentManager().beginTransaction().replace( R.id.book_detail_container, fragment ).commit();
+        fragment.setArguments(arguments);
+        getSupportFragmentManager().beginTransaction().replace(R.id.book_detail_container, fragment).commit();
 
         // update the state
         mTwoPaneBook = book;
@@ -362,7 +377,7 @@ public class MainActivity extends AppCompatActivity implements EditFragment.Edit
 
 
     @Override
-    public void attachSaveListener( final View.OnClickListener listener ){
+    public void attachSaveListener(final View.OnClickListener listener) {
         // used by the {@link EditFragment}, {@see EditFragmentHolder}
         mSaveListener = listener;
 
@@ -370,21 +385,21 @@ public class MainActivity extends AppCompatActivity implements EditFragment.Edit
 
 
     @Override
-    public void done( Book book, boolean actionDone ){
+    public void done(Book book, boolean actionDone) {
         // used by the {@link EditFragment}, {@see EditFragmentHolder}
         mSaveListener = null;
-        showDetailsFragment( book );
+        showDetailsFragment(book);
     }
 
 
     @Override
-    public void onBackPressed(){
-        if( mCurrentState == State.EDIT ){
+    public void onBackPressed() {
+        if (mCurrentState == State.EDIT) {
             // if state changed, necessarily in two panes mode,
             // go back to the details fragment
-            bookSelected( mTwoPaneBook );
+            bookSelected(mTwoPaneBook);
 
-        }else{
+        } else {
             super.onBackPressed();
         }
     }
@@ -392,129 +407,160 @@ public class MainActivity extends AppCompatActivity implements EditFragment.Edit
 
     // ----------------------------------------------------
 
-    public class BooksAdapter extends RecyclerView.Adapter<BooksAdapter.ViewHolder> implements SectionIndexer{
+    public enum SortType {
+        TITLE, DATE
+    }
+
+    public class BooksAdapter extends RecyclerView.Adapter<BooksAdapter.ViewHolder> implements SectionIndexer {
 
         private List<Book> mBooksList;
         private List<Book> mOriginalBooksList;
 
+        private Comparator<Book> bookComparator = Book.TITLE_COMPARATOR;
+        private int sortOrder = 1;
 
-        public BooksAdapter( List<Book> items ){
-            mBooksList = new ArrayList<>( items );
-            mOriginalBooksList = new ArrayList<>( items );
+        private Comparator<Book> adapterComparator = new Comparator<Book>() {
+            @Override
+            public int compare(Book o1, Book o2) {
+                return sortOrder * bookComparator.compare(o1, o2);
+            }
+        };
+
+        public BooksAdapter(List<Book> items) {
+            mBooksList = new ArrayList<>(items);
+            mOriginalBooksList = new ArrayList<>(items);
         }
 
 
-        public BooksAdapter(){
+        public BooksAdapter() {
             mBooksList = new ArrayList<>();
             mOriginalBooksList = new ArrayList<>();
         }
 
 
-        public void setBooksList( List<Book> books ){
-            mOriginalBooksList = new ArrayList<>( books );
+        public void setBooksList(List<Book> books) {
+            mOriginalBooksList = new ArrayList<>(books);
             mBooksList = mOriginalBooksList;
             notifyDataSetChanged();
         }
 
 
-        public void filter( String search ){
+        public void filter(String search) {
 
             List<Book> filtered;
-            if( search == null || search.isEmpty() ){
+            if (search == null || search.isEmpty()) {
                 filtered = mOriginalBooksList;
-            }else{
+            } else {
                 search = search.toLowerCase();
                 filtered = new ArrayList<>();
-                for( Book book : mOriginalBooksList ){
-                    if( book.match( search ) ) filtered.add( book );
+                for (Book book : mOriginalBooksList) {
+                    if (book.match(search)) filtered.add(book);
                 }//end for
             }
 
             mBooksList = filtered;
+            sort();
+        }
+
+        public void setSortOrder(SortType sortType, boolean asc) {
+            sortOrder = asc ? 1 : -1;
+            switch (sortType) {
+                case TITLE:
+                    bookComparator = Book.TITLE_COMPARATOR;
+                    break;
+                case DATE:
+                    bookComparator = Book.DATE_COMPARATOR;
+                    break;
+            }
+            sort();
+        }
+
+        public void sort() {
+            Collections.sort(mBooksList, adapterComparator);
             notifyDataSetChanged();
         }
 
 
         @Override
-        public ViewHolder onCreateViewHolder( ViewGroup parent, int viewType ){
-            View view = LayoutInflater.from( parent.getContext() ).inflate( R.layout.activity_main_list_content,
-                    parent, false );
-            return new ViewHolder( view );
+        public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+            View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.activity_main_list_content,
+                    parent, false);
+            return new ViewHolder(view);
         }
 
 
         @Override
-        public void onBindViewHolder( final ViewHolder holder, int position ){
+        public void onBindViewHolder(final ViewHolder holder, int position) {
 
-            holder.mBook = mBooksList.get( position );
-            holder.mTitleView.setText( holder.mBook.title );
-            holder.mAuthorView.setText( holder.mBook.author );
+            holder.mBook = mBooksList.get(position);
+            holder.mTitleView.setText(holder.mBook.title);
+            holder.mAuthorView.setText(holder.mBook.author + " [" + holder.mBook.date + "]");
 
-            holder.mView.setOnClickListener( new View.OnClickListener(){
+            holder.mView.setOnClickListener(new View.OnClickListener() {
                 @Override
-                public void onClick( View v ){
-                    if( mTwoPane ){
-                        bookSelected( holder.mBook );
+                public void onClick(View v) {
+                    if (mTwoPane) {
+                        bookSelected(holder.mBook);
 
-                    }else{
+                    } else {
                         // todo: don't destroy current activity ?
                         // launch activity
                         Context context = v.getContext();
-                        Intent intent = new Intent( context, DetailActivity.class );
-                        intent.setFlags( Intent.FLAG_ACTIVITY_REORDER_TO_FRONT );
-                        intent.putExtra( MainActivity.ARG_BOOK_TITLE, holder.mBook.title );
+                        Intent intent = new Intent(context, DetailActivity.class);
+                        intent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+                        intent.putExtra(MainActivity.ARG_BOOK_TITLE, holder.mBook.title);
 
-                        context.startActivity( intent );
+                        context.startActivity(intent);
                     }
                 }
-            } );
+            });
         }
 
 
         @Override
-        public int getItemCount(){
+        public int getItemCount() {
             return mBooksList.size();
         }
 
 
         @Override
-        public Object[] getSections(){
+        public Object[] getSections() {
             return mBooksList.toArray();
         }
 
 
         @Override
-        public int getPositionForSection( int sectionIndex ){
+        public int getPositionForSection(int sectionIndex) {
             return 0;
         }
 
 
         @Override
-        public int getSectionForPosition( int position ){
-            if( position >= mBooksList.size() ){
+        public int getSectionForPosition(int position) {
+            if (position >= mBooksList.size()) {
                 position = mBooksList.size() - 1;
             }
             return position;
         }
 
 
-        public class ViewHolder extends RecyclerView.ViewHolder{
+        public class ViewHolder extends RecyclerView.ViewHolder {
             public final View mView;
             public final TextView mTitleView;
             public final TextView mAuthorView;
             public Book mBook;
 
 
-            public ViewHolder( View view ){
-                super( view );
+            public ViewHolder(View view) {
+                super(view);
                 mView = view;
-                mTitleView = ( TextView ) view.findViewById( R.id.title );
-                mAuthorView = ( TextView ) view.findViewById( R.id.author );
+                mTitleView = (TextView) view.findViewById(R.id.title);
+                mAuthorView = (TextView) view.findViewById(R.id.author);
             }
 
 
             @Override
-            public String toString(){
+            public String toString() {
                 return super.toString() + " '" + mTitleView.getText() + "'";
             }
         }

@@ -3,6 +3,10 @@ package ch.derlin.mybooks.books;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import java.text.Collator;
+import java.util.Comparator;
+import java.util.Locale;
+
 /**
  * Derlin - MyBooks Android, May, 2016
  *
@@ -96,4 +100,23 @@ public class Book implements Parcelable{
                 ( date != null && date.toLowerCase().contains( search ) ) || //
                 ( notes != null && notes.toLowerCase().contains( search ) );
     }
+
+    // ------------------------------------
+
+    private static Collator frenchCollator = Collator.getInstance(Locale.FRANCE);
+
+    public static final Comparator<Book> TITLE_COMPARATOR = new Comparator<Book>() {
+        @Override
+        public int compare(Book b1, Book b2) {
+            return frenchCollator.compare(b1.title.toLowerCase(), b2.title.toLowerCase());
+        }
+    };
+
+    public static final Comparator<Book> DATE_COMPARATOR = new Comparator<Book>() {
+        @Override
+        public int compare(Book b1, Book b2) {
+            int compare = b1.date.replaceAll("[^\\d]", "").compareTo(b2.date.replaceAll("[^\\d]", ""));
+            return compare == 0 ? TITLE_COMPARATOR.compare(b1, b2) : compare;
+        }
+    };
 }

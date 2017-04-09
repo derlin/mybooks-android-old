@@ -7,7 +7,7 @@
     <ScrollView
         android:id="@+id/scrollview"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="wrap_content">
 
         <GridLayout
             android:layout_width="match_parent"
@@ -26,6 +26,8 @@
 
             <EditText
                 android:id="@+id/details_title"
+                android:inputType="textCapWords"
+                android:hint="Awesome Book Title"
                 style="@style/details_value_edit" />
 
             <!--author-->
@@ -35,8 +37,9 @@
 
             <EditText
                 android:id="@+id/details_author"
+                android:inputType="textCapSentences"
                 style="@style/details_value_edit"
-                android:text="sdlfkjsj" />
+                android:hint="Mister X" />
 
             <!--date-->
             <TextView
@@ -46,8 +49,8 @@
             <EditText
                 android:id="@+id/details_date"
                 style="@style/details_value_edit"
-                android:inputType="text|textEmailAddress"
-                android:text="sdlfkjsj" />
+                android:inputType="text|date"
+                android:hint="2021-01" />
 
 
             <!--notes header-->
@@ -71,8 +74,10 @@
                 android:layout_height="wrap_content"
                 android:layout_columnSpan="2"
                 android:layout_marginTop="6dp"
-                android:inputType="text|textMultiLine"
-                android:padding="5dp" />
+                android:inputType="textCapSentences|textMultiLine"
+                android:lineSpacingExtra="10dp"
+                android:paddingBottom="10dp"
+                android:hint="Notes about the book"/>
 
         </GridLayout>
     </ScrollView>
