@@ -105,11 +105,11 @@ public class EditFragment extends Fragment implements View.OnClickListener{
         if( mOldTitle != null ) mBook = mService.getBook( mOldTitle ); // edit vs add mode
 
 
-        CollapsingToolbarLayout appBarLayout = ( CollapsingToolbarLayout ) activity.findViewById( R.id.toolbar_layout );
+        /*CollapsingToolbarLayout appBarLayout = ( CollapsingToolbarLayout ) activity.findViewById( R.id.toolbar_layout );
 
         if( appBarLayout != null ){
             appBarLayout.setTitle( mBook.title );
-        }
+        }*/
 
         if( activity instanceof EditFragmentHolder ){
             mHolder = ( EditFragmentHolder ) activity;

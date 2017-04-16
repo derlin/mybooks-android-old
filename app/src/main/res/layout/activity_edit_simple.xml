@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fitsSystemWindows="true"
-    tools:context=".views.MainActivity">
+    tools:context=".views.edit.EditActivity">
 
     <android.support.design.widget.AppBarLayout
         android:id="@+id/app_bar"
@@ -26,8 +26,6 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         app:layout_behavior="@string/appbar_scrolling_view_behavior">
-
-        <include layout="@layout/book_list" />
     </FrameLayout>
 
     <!--TextView
@@ -39,34 +37,13 @@
         android:layout_marginEnd="@dimen/fab_margin">
     </TextView-->
 
-    <LinearLayout
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom|end"
-        android:layout_marginEnd="16dp">
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textStyle="italic"
-            android:text="count: "
-            android:textColor="@android:color/black">
-        </TextView>
-        <TextView
-            android:id="@+id/text_book_counter"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textStyle="bold"
-            android:textColor="@color/colorAccent">
-        </TextView>
-    </LinearLayout>
-
     <android.support.design.widget.FloatingActionButton
         android:id="@+id/fab"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="bottom|end"
+        android:layout_gravity="top|end"
         android:layout_margin="@dimen/fab_margin"
-        android:src="@android:drawable/ic_menu_add" />
+        android:src="@android:drawable/ic_menu_save" />
 
 
 </android.support.design.widget.CoordinatorLayout>

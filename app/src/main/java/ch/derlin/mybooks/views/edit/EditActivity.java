@@ -1,8 +1,10 @@
 package ch.derlin.mybooks.views.edit;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.AppBarLayout;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -32,19 +34,28 @@ public class EditActivity extends AppCompatActivity implements EditFragment.Edit
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        setContentView(R.layout.activity_edit);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.detail_toolbar);
-        setSupportActionBar(toolbar);
+        // set the view
+        setContentView(R.layout.activity_edit_simple);
 
-        // force collapse TODO find a better fix
-        AppBarLayout appBarLayout = (AppBarLayout) findViewById(R.id.app_bar);
-        appBarLayout.setExpanded(false);
-
-        // Show the Up button in the action bar.
+        // display the toolbar
+        setSupportActionBar((Toolbar) findViewById(R.id.toolbar));
         ActionBar actionBar = getSupportActionBar();
-        if (actionBar != null) {
-            actionBar.setDisplayHomeAsUpEnabled(true);
-        }
+        actionBar.setIcon(R.mipmap.ic_launcher);
+        actionBar.setDisplayHomeAsUpEnabled(true);
+
+        // attach listener to the floating button
+        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
+        fab.setOnClickListener(new View.OnClickListener() {
+
+            @Override
+            public void onClick(View view) {
+                // on click, call the save listener (see edit fragment)
+                if (mListener != null) {
+                    mListener.onClick(null);
+                }
+            }
+
+        });
 
         if (savedInstanceState == null) {
             // create the detail fragment
@@ -54,32 +65,18 @@ public class EditActivity extends AppCompatActivity implements EditFragment.Edit
             arguments.putString(MainActivity.ARG_BOOK_TITLE, bookTitle);
             EditFragment fragment = new EditFragment();
             fragment.setArguments(arguments);
-            getSupportFragmentManager().beginTransaction().add(R.id.book_edit_container, fragment).commit();
+            //getSupportFragmentManager().beginTransaction().add(R.id.book_edit_container, fragment).commit();
+            getSupportFragmentManager().beginTransaction().add(R.id.frameLayout, fragment).commit();
         }
     }
 
 
     @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.toolbar_menu_edit, menu);
-        return true;
-    }
-
-
-    @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        int id = item.getItemId();
-        switch (id) {
-            case R.id.action_save:
-                if (mListener != null) {
-                    mListener.onClick(null);
-                }
-                return true;
-
-            case android.R.id.home:
-                setResult(Activity.RESULT_CANCELED);
-                finish();
-                return true;
+        if (item.getItemId() == android.R.id.home) {
+            setResult(Activity.RESULT_CANCELED);
+            finish();
+            return true;
         }
         return super.onOptionsItemSelected(item);
     }

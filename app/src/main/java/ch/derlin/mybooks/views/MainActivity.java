@@ -74,9 +74,10 @@ public class MainActivity extends AppCompatActivity implements EditFragment.Edit
     }
 
     private State mCurrentState = State.NONE; // current fragment type
-    private MenuItem mActionDelete, mActionEdit, mActionSave, mActionSort; // the toolbar buttons
+    private MenuItem mActionDelete, mActionEdit, mActionSave; // the toolbar buttons
     private View.OnClickListener mSaveListener; // the save listener from the EditFragment
     private Book mTwoPaneBook = null; // the book currently shown/edited, if any
+    private String currentFilter = null; // to be able to filter on resume
 
 
     // ----------------------------------------------------
@@ -182,6 +183,7 @@ public class MainActivity extends AppCompatActivity implements EditFragment.Edit
             // either books not already loaded, or changes happened
             List<Book> books = mService.getBooks();
             if (books != null) mAdapter.setBooksList(books);
+            if(currentFilter != null) mAdapter.filter(currentFilter);
         }
     }
 
@@ -262,7 +264,8 @@ public class MainActivity extends AppCompatActivity implements EditFragment.Edit
 
             @Override
             public boolean onQueryTextChange(String s) {
-                mAdapter.filter(s);
+                currentFilter = s;
+                mAdapter.filter(currentFilter);
                 return false;
             }
         });
@@ -298,6 +301,7 @@ public class MainActivity extends AppCompatActivity implements EditFragment.Edit
                 return true;
             }
             return false;
+
         } else if (item.getGroupId() == R.id.group_menu_sort && !item.isChecked()) {
             item.setChecked(true);
             if (id == R.id.submenu_sort_title_asc) {
