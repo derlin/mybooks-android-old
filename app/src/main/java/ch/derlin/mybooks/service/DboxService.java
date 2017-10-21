@@ -8,6 +8,10 @@ import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import ch.derlin.mybooks.books.Book;
 import com.dropbox.client2.DropboxAPI;
+import com.dropbox.core.v2.files.FileMetadata;
+import com.dropbox.core.v2.files.ListRevisionsResult;
+import com.dropbox.core.v2.files.Metadata;
+import com.dropbox.core.v2.files.WriteMode;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
@@ -268,10 +272,12 @@ public class DboxService extends BaseDboxService{
                 try( FileOutputStream out = new FileOutputStream( file ) ){
                     String json = mGson.toJson( updatedBooks );
                     out.write( json.getBytes() );
-                    DropboxAPI.Entry entry = mDBApi.putFileOverwrite( BOOKS_FILE_PATH, new FileInputStream( file ),
-                            file.length(), null );
+                    FileMetadata fileMetadata = dbxClientV2.files()
+                            .uploadBuilder(BOOKS_FILE_PATH)
+                            .withMode(WriteMode.OVERWRITE)
+                            .uploadAndFinish(new FileInputStream(file));
 
-                    mLatestRev = entry.rev;
+                    mLatestRev = fileMetadata.getRev();
                     setBooks( updatedBooks );
                     notifyBooksChanged();
 
@@ -304,14 +310,16 @@ public class DboxService extends BaseDboxService{
             File file = null;
 
             try{
+                ListRevisionsResult revisions = dbxClientV2.files().listRevisions(BOOKS_FILE_PATH);
+                // TODO: no revision -> create file !
+                String rev = revisions.getEntries().get(0).getRev();
 
-                file = File.createTempFile( "mybooks", "json" );
-                FileOutputStream outputStream = new FileOutputStream( file );
-                DropboxAPI.DropboxFileInfo info = mDBApi.getFile( BOOKS_FILE_PATH, null, outputStream, null );
-                String rev = info.getMetadata().rev;
 
                 if( mLatestRev == null || !mLatestRev.equals( rev ) ){
                     // there is actually a change
+                    file = File.createTempFile( "mybooks", "json" );
+                    FileOutputStream outputStream = new FileOutputStream( file );
+                    dbxClientV2.files().download(BOOKS_FILE_PATH).download(outputStream);
                     mBooks = mGson.fromJson( new FileReader( file ), new TypeToken<Map<String, Book>>(){}.getType() );
                     mLatestRev = rev;
                     if( mBooks != null ){

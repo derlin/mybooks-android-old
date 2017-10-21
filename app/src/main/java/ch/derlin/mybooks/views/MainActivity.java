@@ -423,8 +423,8 @@ public class MainActivity extends AppCompatActivity implements EditFragment.Edit
         private List<Book> mOriginalBooksList;
         private TextView counterView;
 
-        private Comparator<Book> bookComparator = Book.TITLE_COMPARATOR;
-        private int sortOrder = 1;
+        private Comparator<Book> bookComparator = Book.DATE_COMPARATOR;
+        private int sortOrder = -1;
 
         private Comparator<Book> adapterComparator = new Comparator<Book>() {
             @Override

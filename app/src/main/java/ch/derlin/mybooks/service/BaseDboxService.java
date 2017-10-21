@@ -3,13 +3,16 @@ package ch.derlin.mybooks.service;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Binder;
 import android.os.IBinder;
-import android.preference.PreferenceManager;
 import android.util.Log;
-import com.dropbox.client2.DropboxAPI;
-import com.dropbox.client2.android.AndroidAuthSession;
-import com.dropbox.client2.session.AppKeyPair;
+
+import com.dropbox.core.DbxRequestConfig;
+import com.dropbox.core.android.Auth;
+import com.dropbox.core.v2.DbxClientV2;
+
+import ch.derlin.mybooks.R;
 
 /**
  * A basic dropbox service using the V2 API.
@@ -26,29 +29,27 @@ import com.dropbox.client2.session.AppKeyPair;
  *
  * @author Lucy Linder
  */
-public class BaseDboxService extends Service{
+public class BaseDboxService extends Service {
 
-    public static final String DBOX_APP_KEY = "213bpo6j2q90un0";
-    public static final String DBOX_APP_SECRET = "b1tijzm481l9eta";
-
-    // In the class declaration section:
-    protected DropboxAPI<AndroidAuthSession> mDBApi;
+    protected DbxClientV2 dbxClientV2;
 
     private final IBinder myBinder = new BTBinder();
 
-    /** Binder for this service * */
-    public class BTBinder extends Binder{
+    /**
+     * Binder for this service *
+     */
+    public class BTBinder extends Binder {
         /**
          * @return a reference to the bound service
          */
-        public BaseDboxService getService(){
+        public BaseDboxService getService() {
             return BaseDboxService.this;
         }
     }//end class
 
 
     @Override
-    public IBinder onBind( Intent arg0 ){
+    public IBinder onBind(Intent arg0) {
         return myBinder;
     }
 
@@ -57,8 +58,8 @@ public class BaseDboxService extends Service{
 
 
     @Override
-    public int onStartCommand( Intent intent, int flags, int startId ){
-        return super.onStartCommand( intent, flags, startId );
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        return super.onStartCommand(intent, flags, startId);
     }
 
     // ----------------------------------------------------
@@ -74,16 +75,16 @@ public class BaseDboxService extends Service{
      * @return true (immediate) if already authentified, won't
      * return but will launch the OAuth process otherwise.
      */
-    public boolean startAuth( Context callingActivity ){
-        // And later in some initialization function:
-        AndroidAuthSession session = getSession( getApplicationContext() );
-        mDBApi = new DropboxAPI<>( session );
-
-        if( !session.isLinked() ){
-            session.startOAuth2Authentication( callingActivity );
+    public boolean startAuth(Context callingActivity) {
+        String accessToken = getAccessToken();
+        if (accessToken == null) {
+            Auth.startOAuth2Authentication(this, getString(R.string.app_key));
             return false;
+        } else {
+            initializeClient(accessToken);
+            return true;
         }
-        return true;
+
     }
 
 
@@ -92,19 +93,15 @@ public class BaseDboxService extends Service{
      * onResume method of the caller. See {@link ch.derlin.mybooks.views.StartActivity}
      * for an example.
      */
-    public void finishAuth(){
+    public void finishAuth() {
 
-        if( mDBApi.getSession().authenticationSuccessful() ){
-            try{
-                // Required to complete auth, sets the access token on the session
-                mDBApi.getSession().finishAuthentication();
-
-                String oauthToken = mDBApi.getSession().getOAuth2AccessToken();
-                storeSessionTokens( getApplicationContext(), oauthToken );
-
-            }catch( IllegalStateException e ){
-                Log.i( "DbAuthLog", "Error authenticating", e );
-            }
+        String accessToken = Auth.getOAuth2Token(); //generate Access Token
+        if (accessToken != null) {
+            //Store accessToken in SharedPreferences
+            storeAccessToken(accessToken);
+            initializeClient(accessToken);
+        } else {
+            Log.i("DbAuthLog", "Error authenticating");
         }
     }
 
@@ -112,32 +109,20 @@ public class BaseDboxService extends Service{
     // ----------------------------------------------------
 
 
-    private AndroidAuthSession getSession( Context appContext ){
-        String token = getOauthToken( appContext );
-
-        if( token == null ){
-            return new AndroidAuthSession( getAppKeyPair() );
-        }
-
-        return new AndroidAuthSession( getAppKeyPair(), token );
+    private void initializeClient(String accessToken) {
+        DbxRequestConfig config = DbxRequestConfig.newBuilder("MyBooks/1.0").build();
+        dbxClientV2 = new DbxClientV2(config, accessToken);
     }
 
 
-    private AppKeyPair getAppKeyPair(){
-        AppKeyPair appKeys = new AppKeyPair( DBOX_APP_KEY, DBOX_APP_SECRET );
-        return appKeys;
+    private void storeAccessToken(String accessToken) {
+        SharedPreferences prefs = getSharedPreferences(getPackageName(), Context.MODE_PRIVATE);
+        prefs.edit().putString(getString(R.string.prefs_access_token), accessToken).apply();
     }
 
 
-    private void storeSessionTokens( Context appContext, String token ){
-        PreferenceManager.getDefaultSharedPreferences( appContext ).edit() //
-                .putString( "oauth.token", token ) //
-                .commit();
-    }
-
-
-    private String getOauthToken( Context appContext ){
-        return PreferenceManager.getDefaultSharedPreferences( appContext ) //
-                .getString( "oauth.token", null );
+    private String getAccessToken() {
+        SharedPreferences prefs = getSharedPreferences(getPackageName(), Context.MODE_PRIVATE);
+        return prefs.getString(getString(R.string.prefs_access_token), null);
     }
 }

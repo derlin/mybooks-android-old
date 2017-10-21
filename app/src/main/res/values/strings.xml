@@ -1,4 +1,9 @@
 <resources>
     <string name="app_name">MyBooks</string>
     <string name="title_book_detail">Book Detail</string>
+
+    <string name="app_key">213bpo6j2q90un0</string>
+    <string name="app_secret">b1tijzm481l9eta</string>
+
+    <string name="prefs_access_token">dp-access-token</string>
 </resources>
